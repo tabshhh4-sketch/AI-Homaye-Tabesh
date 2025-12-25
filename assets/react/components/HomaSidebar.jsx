@@ -97,11 +97,16 @@ const HomaSidebar = () => {
 
         // Call AI endpoint
         try {
+            // Check if nonce is available
+            if (!window.homayeParallelUIConfig?.nonce) {
+                throw new Error('امنیت: نشست شما منقضی شده است. لطفاً صفحه را رفرش کنید.');
+            }
+
             const response = await fetch('/wp-json/homaye/v1/ai/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-WP-Nonce': window.homayeParallelUIConfig?.nonce || ''
+                    'X-WP-Nonce': window.homayeParallelUIConfig.nonce
                 },
                 body: JSON.stringify({
                     message: message,

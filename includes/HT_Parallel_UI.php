@@ -337,7 +337,19 @@ class HT_Parallel_UI
 
         // Generate new guest ID
         $guest_id = 'guest_' . wp_generate_password(16, false);
-        setcookie('homa_guest_id', $guest_id, time() + (86400 * 30), '/');
+        
+        // Set cookie with security attributes
+        setcookie(
+            'homa_guest_id',
+            $guest_id,
+            [
+                'expires' => time() + (86400 * 30), // 30 days
+                'path' => '/',
+                'secure' => is_ssl(),
+                'httponly' => true,
+                'samesite' => 'Strict'
+            ]
+        );
         
         return $guest_id;
     }

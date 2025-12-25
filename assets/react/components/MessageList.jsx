@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
 
+// Configurable streaming delay (milliseconds per character)
+const STREAMING_DELAY_MS = 20;
+
 /**
  * MessageList Component
  * Displays chat messages with streaming text effect
  */
-const MessageList = ({ messages }) => {
+const MessageList = ({ messages, streamingDelay = STREAMING_DELAY_MS }) => {
     return (
         <div className="homa-message-list">
             {messages.map((message) => (
-                <Message key={message.id} message={message} />
+                <Message 
+                    key={message.id} 
+                    message={message}
+                    streamingDelay={streamingDelay}
+                />
             ))}
         </div>
     );
@@ -17,7 +24,7 @@ const MessageList = ({ messages }) => {
 /**
  * Individual Message Component with streaming effect
  */
-const Message = ({ message }) => {
+const Message = ({ message, streamingDelay = STREAMING_DELAY_MS }) => {
     const [displayedContent, setDisplayedContent] = useState('');
     const [isStreaming, setIsStreaming] = useState(false);
 
@@ -33,13 +40,12 @@ const Message = ({ message }) => {
 
     const streamText = async (text) => {
         let index = 0;
-        const delay = 20; // milliseconds per character
 
         const stream = () => {
             if (index < text.length) {
                 setDisplayedContent((prev) => prev + text[index]);
                 index++;
-                setTimeout(stream, delay);
+                setTimeout(stream, streamingDelay);
             } else {
                 setIsStreaming(false);
             }
