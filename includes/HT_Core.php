@@ -57,6 +57,16 @@ final class HT_Core
     public HT_Decision_Trigger $decision_trigger;
 
     /**
+     * Inference engine
+     */
+    public HT_Inference_Engine $inference_engine;
+
+    /**
+     * AI Controller
+     */
+    public HT_AI_Controller $ai_controller;
+
+    /**
      * Admin interface
      */
     public ?HT_Admin $admin = null;
@@ -94,6 +104,8 @@ final class HT_Core
         $this->woo_context      = new HT_WooCommerce_Context();
         $this->divi_bridge      = new HT_Divi_Bridge();
         $this->decision_trigger = new HT_Decision_Trigger();
+        $this->inference_engine = new HT_Inference_Engine();
+        $this->ai_controller    = new HT_AI_Controller();
         
         // Initialize admin only in admin area
         if (is_admin()) {
@@ -113,9 +125,11 @@ final class HT_Core
     {
         // اتصال به REST API وردپرس
         add_action('rest_api_init', [$this->eyes, 'register_endpoints']);
+        add_action('rest_api_init', [$this->ai_controller, 'register_endpoints']);
 
         // تزریق اسکریپتهای ردیاب به فرانتئند (سازگار با Divi)
         add_action('wp_enqueue_scripts', [$this->eyes, 'enqueue_tracker']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_ui_executor']);
 
         // Load admin assets
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
@@ -136,6 +150,22 @@ final class HT_Core
             HT_PLUGIN_URL . 'assets/css/admin.css',
             [],
             HT_VERSION
+        );
+    }
+
+    /**
+     * Enqueue UI executor script for frontend
+     *
+     * @return void
+     */
+    public function enqueue_ui_executor(): void
+    {
+        wp_enqueue_script(
+            'homaye-tabesh-ui-executor',
+            HT_PLUGIN_URL . 'assets/js/ui-executor.js',
+            ['jquery'],
+            HT_VERSION,
+            true
         );
     }
 

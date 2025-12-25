@@ -134,12 +134,13 @@ class HT_Gemini_Client
      * Build generation config with JSON schema
      *
      * @param array $schema JSON schema
+     * @param float $temperature Temperature setting (default 0.7)
      * @return array Generation config
      */
-    private function build_generation_config(array $schema): array
+    private function build_generation_config(array $schema, float $temperature = 0.7): array
     {
         $config = [
-            'temperature' => 0.7,
+            'temperature' => $temperature,
             'topK' => 40,
             'topP' => 0.95,
             'maxOutputTokens' => 2048,
@@ -287,5 +288,52 @@ class HT_Gemini_Client
         }
 
         return $products;
+    }
+
+    /**
+     * Get JSON response with custom system instruction
+     * Optimized for inference engine with low temperature
+     *
+     * @param string $prompt User prompt
+     * @param string $system_instruction Custom system instruction
+     * @param array $schema JSON schema for structured output
+     * @return array Response data
+     */
+    public function get_json_response(
+        string $prompt,
+        string $system_instruction,
+        array $schema = []
+    ): array {
+        if (empty($this->api_key)) {
+            return $this->get_fallback_response('API key not configured');
+        }
+
+        try {
+            // Use low temperature for accuracy (anti-hallucination)
+            $generation_config = $this->build_generation_config($schema, 0.1);
+
+            $payload = [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'systemInstruction' => [
+                    'parts' => [
+                        ['text' => $system_instruction]
+                    ]
+                ],
+                'generationConfig' => $generation_config
+            ];
+
+            $response = $this->make_request($payload);
+
+            return $this->parse_response($response);
+        } catch (\Exception $e) {
+            error_log('Homaye Tabesh - Gemini JSON Response Error: ' . $e->getMessage());
+            return $this->get_fallback_response($e->getMessage());
+        }
     }
 }

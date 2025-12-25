@@ -1,0 +1,207 @@
+<?php
+/**
+ * AI Controller - REST API Endpoint
+ * Main endpoint for frontend to communicate with Homa
+ *
+ * @package HomayeTabesh
+ * @since 1.0.0
+ */
+
+declare(strict_types=1);
+
+namespace HomayeTabesh;
+
+/**
+ * کنترلر REST API برای ارتباط با هما
+ * نقطه ورود اصلی برای فرانتئند
+ */
+class HT_AI_Controller
+{
+    /**
+     * Inference engine
+     */
+    private HT_Inference_Engine $inference_engine;
+
+    /**
+     * Prompt builder
+     */
+    private HT_Prompt_Builder_Service $prompt_builder;
+
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->inference_engine = new HT_Inference_Engine();
+        $this->prompt_builder = new HT_Prompt_Builder_Service();
+    }
+
+    /**
+     * Register REST API endpoints
+     *
+     * @return void
+     */
+    public function register_endpoints(): void
+    {
+        // Main AI query endpoint
+        register_rest_route('homaye/v1', '/ai/query', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handle_ai_query'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'user_id' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'message' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_textarea_field',
+                ],
+                'context' => [
+                    'required' => false,
+                    'type' => 'object',
+                    'default' => [],
+                ],
+            ],
+        ]);
+
+        // Get context suggestion endpoint
+        register_rest_route('homaye/v1', '/ai/suggestion', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handle_suggestion_request'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'user_id' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
+
+        // Analyze user intent endpoint
+        register_rest_route('homaye/v1', '/ai/intent', [
+            'methods' => 'POST',
+            'callback' => [$this, 'handle_intent_analysis'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'user_id' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+            ],
+        ]);
+
+        // Health check endpoint
+        register_rest_route('homaye/v1', '/ai/health', [
+            'methods' => 'GET',
+            'callback' => [$this, 'handle_health_check'],
+            'permission_callback' => '__return_true',
+        ]);
+    }
+
+    /**
+     * Handle AI query from frontend
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response object
+     */
+    public function handle_ai_query(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $user_id = $request->get_param('user_id');
+        $message = $request->get_param('message');
+        $context = $request->get_param('context') ?: [];
+
+        // Sanitize user input
+        $message = $this->prompt_builder->sanitize_input($message);
+
+        // Build user context
+        $user_context = [
+            'user_identifier' => $user_id,
+            'message' => $message,
+            'current_page' => $context['page'] ?? '',
+            'current_element' => $context['element'] ?? '',
+            'timestamp' => current_time('mysql'),
+        ];
+
+        // Generate decision
+        $result = $this->inference_engine->generate_decision($user_context);
+
+        // Return response
+        return new \WP_REST_Response($result, $result['success'] ? 200 : 500);
+    }
+
+    /**
+     * Handle suggestion request
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response object
+     */
+    public function handle_suggestion_request(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $user_id = $request->get_param('user_id');
+
+        $result = $this->inference_engine->get_context_suggestion($user_id, []);
+
+        return new \WP_REST_Response($result, $result['success'] ? 200 : 404);
+    }
+
+    /**
+     * Handle intent analysis request
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response object
+     */
+    public function handle_intent_analysis(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $user_id = $request->get_param('user_id');
+
+        $result = $this->inference_engine->analyze_user_intent($user_id);
+
+        return new \WP_REST_Response($result, 200);
+    }
+
+    /**
+     * Handle health check
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response object
+     */
+    public function handle_health_check(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $api_key = get_option('ht_gemini_api_key', '');
+        
+        $health = [
+            'status' => 'ok',
+            'timestamp' => current_time('mysql'),
+            'api_configured' => !empty($api_key),
+            'components' => [
+                'inference_engine' => 'operational',
+                'knowledge_base' => 'operational',
+                'action_parser' => 'operational',
+            ],
+        ];
+
+        return new \WP_REST_Response($health, 200);
+    }
+
+    /**
+     * Validate nonce for authenticated requests
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return bool True if valid
+     */
+    public function validate_nonce(\WP_REST_Request $request): bool
+    {
+        $nonce = $request->get_header('X-WP-Nonce');
+        
+        if (empty($nonce)) {
+            return false;
+        }
+
+        return wp_verify_nonce($nonce, 'wp_rest');
+    }
+}
