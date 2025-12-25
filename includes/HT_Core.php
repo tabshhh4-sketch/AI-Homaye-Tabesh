@@ -77,6 +77,11 @@ final class HT_Core
     public HT_Cart_Manager $cart_manager;
 
     /**
+     * Parallel UI Manager (React Sidebar)
+     */
+    public HT_Parallel_UI $parallel_ui;
+
+    /**
      * Admin interface
      */
     public ?HT_Admin $admin = null;
@@ -118,6 +123,7 @@ final class HT_Core
         $this->ai_controller    = new HT_AI_Controller();
         $this->perception_bridge = new HT_Perception_Bridge($this);
         $this->cart_manager     = new HT_Cart_Manager($this);
+        $this->parallel_ui      = new HT_Parallel_UI($this);
         
         // Initialize admin only in admin area
         if (is_admin()) {
