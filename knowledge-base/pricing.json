@@ -1,0 +1,216 @@
+{
+  "paper_types": {
+    "glossy": {
+      "name": "کاغذ گلاسه",
+      "description": "کاغذ براق و صیقلی مناسب برای چاپ تصاویر رنگی",
+      "weights": ["80gr", "90gr", "115gr", "135gr", "170gr", "200gr", "250gr", "300gr"],
+      "applications": ["کاتالوگ", "بروشور", "پوستر", "جلد مجله"],
+      "price_factor": 1.2,
+      "notes": "بهترین کیفیت برای چاپ رنگی"
+    },
+    "matte": {
+      "name": "کاغذ مات",
+      "description": "کاغذ بدون برق با سطح صاف",
+      "weights": ["80gr", "90gr", "115gr", "135gr", "170gr"],
+      "applications": ["کتاب", "گزارش", "پایان‌نامه"],
+      "price_factor": 1.0,
+      "notes": "مناسب برای متن‌های طولانی"
+    },
+    "writing": {
+      "name": "کاغذ تحریر",
+      "description": "کاغذ استاندارد برای چاپ متن",
+      "weights": ["70gr", "80gr"],
+      "applications": ["کتاب", "جزوه", "نامه"],
+      "price_factor": 0.8,
+      "notes": "اقتصادی‌ترین گزینه"
+    },
+    "kraft": {
+      "name": "کاغذ کرافت",
+      "description": "کاغذ قهوه‌ای طبیعی",
+      "weights": ["120gr", "150gr", "200gr"],
+      "applications": ["بسته‌بندی", "جلد ویژه", "کارت پستال"],
+      "price_factor": 1.1,
+      "notes": "ظاهر طبیعی و محیط زیست دوست"
+    }
+  },
+  "binding_types": {
+    "spiral": {
+      "name": "صحافی سیم",
+      "description": "صحافی با سیم فلزی یا پلاستیکی",
+      "price_range": "15000-30000 تومان",
+      "min_pages": 10,
+      "max_pages": 300,
+      "applications": ["گزارش", "پایان‌نامه", "کاتالوگ"],
+      "advantages": ["قابل باز شدن کامل", "دوام بالا"],
+      "price_factor": 1.0
+    },
+    "perfect": {
+      "name": "صحافی چسب (شومیز)",
+      "description": "صحافی با چسب گرم",
+      "price_range": "25000-50000 تومان",
+      "min_pages": 50,
+      "max_pages": 500,
+      "applications": ["کتاب", "مجله", "رمان"],
+      "advantages": ["ظاهر حرفه‌ای", "مناسب تیراژ بالا"],
+      "price_factor": 1.3
+    },
+    "hardcover": {
+      "name": "جلد سخت (گالینگور)",
+      "description": "صحافی با جلد سخت و محکم",
+      "price_range": "80000-150000 تومان",
+      "min_pages": 100,
+      "max_pages": 800,
+      "applications": ["کتاب رسمی", "آلبوم", "کتاب تصویری"],
+      "advantages": ["دوام بسیار بالا", "ظاهر لوکس"],
+      "price_factor": 2.5
+    },
+    "stapled": {
+      "name": "صحافی منگنه",
+      "description": "صحافی ساده با منگنه",
+      "price_range": "5000-15000 تومان",
+      "min_pages": 4,
+      "max_pages": 50,
+      "applications": ["جزوه", "بروشور", "نشریه"],
+      "advantages": ["ارزان", "سریع"],
+      "price_factor": 0.5
+    }
+  },
+  "print_quality": {
+    "black_white": {
+      "name": "سیاه و سفید",
+      "description": "چاپ تک رنگ مشکی",
+      "price_per_page": "500-1000 تومان",
+      "applications": ["متن ساده", "گزارش"],
+      "price_factor": 1.0
+    },
+    "color": {
+      "name": "رنگی (CMYK)",
+      "description": "چاپ چهار رنگ اصلی",
+      "price_per_page": "2000-5000 تومان",
+      "applications": ["کاتالوگ", "بروشور", "پوستر"],
+      "price_factor": 3.0
+    }
+  },
+  "tirage_pricing": {
+    "discount_tiers": [
+      {
+        "min_quantity": 1,
+        "max_quantity": 50,
+        "discount": 0,
+        "note": "قیمت پایه"
+      },
+      {
+        "min_quantity": 51,
+        "max_quantity": 100,
+        "discount": 10,
+        "note": "10% تخفیف"
+      },
+      {
+        "min_quantity": 101,
+        "max_quantity": 250,
+        "discount": 15,
+        "note": "15% تخفیف"
+      },
+      {
+        "min_quantity": 251,
+        "max_quantity": 500,
+        "discount": 20,
+        "note": "20% تخفیف"
+      },
+      {
+        "min_quantity": 501,
+        "max_quantity": 1000,
+        "discount": 25,
+        "note": "25% تخفیف"
+      },
+      {
+        "min_quantity": 1001,
+        "max_quantity": 999999,
+        "discount": 30,
+        "note": "30% تخفیف (عمده‌فروشی)"
+      }
+    ],
+    "formula": "قیمت نهایی = (تعداد صفحات × قیمت هر صفحه × ضریب کاغذ × ضریب رنگ) + هزینه صحافی - تخفیف تیراژ"
+  },
+  "delivery_options": {
+    "standard": {
+      "name": "تحویل عادی",
+      "duration": "7-10 روز کاری",
+      "cost": 0,
+      "note": "رایگان برای سفارش‌های بالای 5 میلیون تومان"
+    },
+    "express": {
+      "name": "تحویل سریع",
+      "duration": "3-5 روز کاری",
+      "cost_percent": 15,
+      "note": "15% هزینه اضافی"
+    },
+    "urgent": {
+      "name": "تحویل فوری",
+      "duration": "24-48 ساعت",
+      "cost_percent": 30,
+      "note": "30% هزینه اضافی - فقط تهران"
+    }
+  },
+  "special_services": {
+    "lamination": {
+      "name": "سلفون (لمینت)",
+      "types": ["مات", "براق"],
+      "price_per_sheet": "3000-5000 تومان",
+      "note": "افزایش دوام و زیبایی"
+    },
+    "uv_coating": {
+      "name": "لاک UV",
+      "types": ["کامل", "موضعی"],
+      "price_per_sheet": "5000-10000 تومان",
+      "note": "برجسته‌سازی و براقیت"
+    },
+    "embossing": {
+      "name": "برجسته‌کاری",
+      "price_per_design": "50000-200000 تومان",
+      "note": "ایجاد افکت سه‌بعدی"
+    },
+    "foil": {
+      "name": "فویل (طلاکوب)",
+      "colors": ["طلایی", "نقره‌ای", "رنگی"],
+      "price_per_sheet": "10000-20000 تومان",
+      "note": "ظاهر لوکس و چشمگیر"
+    }
+  },
+  "pricing_examples": {
+    "book_example": {
+      "description": "کتاب 200 صفحه، تیراژ 300، کاغذ تحریر 80gr، جلد شومیز",
+      "calculation": {
+        "pages": 200,
+        "tirage": 300,
+        "paper_cost_per_page": 800,
+        "binding_cost": 30000,
+        "color_factor": 1.0,
+        "tirage_discount": 20,
+        "total_per_copy": "تقریباً 190000 تومان",
+        "total_order": "تقریباً 57 میلیون تومان"
+      }
+    },
+    "catalog_example": {
+      "description": "کاتالوگ 24 صفحه، تیراژ 100، کاغذ گلاسه 135gr، رنگی، صحافی سیم",
+      "calculation": {
+        "pages": 24,
+        "tirage": 100,
+        "paper_cost_per_page": 3000,
+        "binding_cost": 20000,
+        "color_factor": 3.0,
+        "tirage_discount": 10,
+        "total_per_copy": "تقریباً 218000 تومان",
+        "total_order": "تقریباً 21.8 میلیون تومان"
+      }
+    }
+  },
+  "rules": {
+    "minimum_order": "حداقل سفارش: 10 نسخه",
+    "prepayment": "پیش‌پرداخت: 50% هنگام ثبت سفارش",
+    "price_validity": "قیمت‌ها به مدت 7 روز معتبر است",
+    "custom_sizes": "ابعاد سفارشی: 10% هزینه اضافی",
+    "file_requirements": "فرمت فایل: PDF با کیفیت چاپ (300 DPI)",
+    "color_mode": "حالت رنگ: CMYK برای چاپ رنگی"
+  }
+}
