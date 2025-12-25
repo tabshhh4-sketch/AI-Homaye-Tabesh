@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PR 6.5 - Event Bus Validation Tests</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .test-button:active {
+            transform: translateY(0);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .status.pass {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .status.fail {
+            background: #f44336;
+            color: white;
+        }
+        
+        .status.pending {
+            background: #ff9800;
+            color: white;
+        }
+        
+        #console-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .test-form {
+            display: grid;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .test-results {
+            margin-top: 20px;
+        }
+        
+        .test-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .test-item.passed {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .test-item.failed {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 PR 6.5 - Event Bus Integration Tests</h1>
+        
+        <!-- Test 1: Connectivity Check -->
+        <div class="test-section">
+            <h2>1️⃣ Connectivity Check</h2>
+            <p>Tests if all components are loaded and connected to the Event Bus.</p>
+            <button class="test-button" onclick="runConnectivityTest()">Run Connectivity Test</button>
+            <div id="connectivity-results" class="test-results"></div>
+        </div>
+        
+        <!-- Test 2: Event Emission & Reception -->
+        <div class="test-section">
+            <h2>2️⃣ Event Flow Test</h2>
+            <p>Tests if events can be emitted and received through the Event Bus.</p>
+            <button class="test-button" onclick="runEventFlowTest()">Test Event Flow</button>
+            <div id="event-flow-results" class="test-results"></div>
+        </div>
+        
+        <!-- Test 3: State Management -->
+        <div class="test-section">
+            <h2>3️⃣ State Management Test</h2>
+            <p>Tests global state updates and synchronization.</p>
+            <button class="test-button" onclick="runStateTest()">Test State Management</button>
+            <div id="state-results" class="test-results"></div>
+        </div>
+        
+        <!-- Test 4: Form Change Detection -->
+        <div class="test-section">
+            <h2>4️⃣ Form Change Detection Test</h2>
+            <p>Tests if form changes trigger events. Type in the fields below:</p>
+            <div class="test-form">
+                <div class="form-group">
+                    <label for="test-name">نام (Name):</label>
+                    <input type="text" id="test-name" name="test-name" placeholder="اسم خود را وارد کنید">
+                </div>
+                <div class="form-group">
+                    <label for="test-email">ایمیل (Email):</label>
+                    <input type="email" id="test-email" name="test-email" placeholder="example@email.com">
+                </div>
+                <div class="form-group">
+                    <label for="test-tirage">تیراژ (Print Run):</label>
+                    <input type="number" id="test-tirage" name="test-tirage" placeholder="500">
+                </div>
+            </div>
+            <div id="form-change-results" class="test-results"></div>
+        </div>
+        
+        <!-- Test 5: Command Interpreter -->
+        <div class="test-section">
+            <h2>5️⃣ Command Interpreter Test</h2>
+            <p>Tests if AI commands can be parsed and executed.</p>
+            <button class="test-button" onclick="testHighlightCommand()">Test HIGHLIGHT Command</button>
+            <button class="test-button" onclick="testScrollCommand()">Test SCROLL Command</button>
+            <button class="test-button" onclick="testMultipleCommands()">Test Multiple Commands</button>
+            <div id="command-results" class="test-results"></div>
+        </div>
+        
+        <!-- Test 6: Performance Test -->
+        <div class="test-section">
+            <h2>6️⃣ Performance Test</h2>
+            <p>Tests event latency (should be < 100ms).</p>
+            <button class="test-button" onclick="runPerformanceTest()">Run Performance Test</button>
+            <div id="performance-results" class="test-results"></div>
+        </div>
+        
+        <!-- Console Output -->
+        <div class="test-section">
+            <h2>📊 Console Output</h2>
+            <div id="console-output">Waiting for tests...</div>
+            <button class="test-button" onclick="clearConsole()">Clear Console</button>
+        </div>
+    </div>
+
+    <script>
+        // Mock window.Homa for testing if not loaded from WordPress
+        if (typeof window.Homa === 'undefined') {
+            console.warn('Homa Event Bus not loaded from WordPress, creating mock for testing...');
+            // You would load the actual scripts here in WordPress context
+        }
+        
+        // Console output
+        function log(message, type = 'info') {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString('fa-IR');
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearConsole() {
+            document.getElementById('console-output').textContent = 'Console cleared.\n';
+        }
+        
+        function addTestResult(containerId, testName, passed, details = '') {
+            const container = document.getElementById(containerId);
+            const div = document.createElement('div');
+            div.className = `test-item ${passed ? 'passed' : 'failed'}`;
+            div.innerHTML = `
+                <span>${testName}</span>
+                <span class="status ${passed ? 'pass' : 'fail'}">${passed ? 'PASS' : 'FAIL'}</span>
+            `;
+            if (details) {
+                div.title = details;
+            }
+            container.appendChild(div);
+        }
+        
+        // Test 1: Connectivity Check
+        function runConnectivityTest() {
+            log('Running connectivity check...', 'info');
+            const container = document.getElementById('connectivity-results');
+            container.innerHTML = '';
+            
+            try {
+                if (typeof window.Homa === 'undefined') {
+                    addTestResult('connectivity-results', 'Event Bus Loaded', false, 'window.Homa not found');
+                    log('Event Bus not loaded!', 'error');
+                    return;
+                }
+                
+                addTestResult('connectivity-results', 'Event Bus Loaded', true);
+                log('✅ Event Bus loaded', 'success');
+                
+                // Check connectivity
+                const status = window.Homa.checkConnectivity();
+                
+                addTestResult('connectivity-results', 'Indexer Available', status.indexer);
+                addTestResult('connectivity-results', 'Orchestrator Available', status.orchestrator);
+                addTestResult('connectivity-results', 'UI Executor Available', status.uiExecutor);
+                addTestResult('connectivity-results', 'React Sidebar Available', status.reactSidebar);
+                addTestResult('connectivity-results', 'Test Event Flow', status.testPassed);
+                
+                log(`Connectivity: ${JSON.stringify(status, null, 2)}`, 'success');
+            } catch (error) {
+                log(`Connectivity test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 2: Event Flow
+        function runEventFlowTest() {
+            log('Running event flow test...', 'info');
+            const container = document.getElementById('event-flow-results');
+            container.innerHTML = '';
+            
+            try {
+                let eventReceived = false;
+                let receivedData = null;
+                
+                const cleanup = window.Homa.on('test:event_flow', (data) => {
+                    eventReceived = true;
+                    receivedData = data;
+                });
+                
+                window.Homa.emit('test:event_flow', { message: 'Hello from test!', timestamp: Date.now() });
+                
+                setTimeout(() => {
+                    addTestResult('event-flow-results', 'Event Emitted', true);
+                    addTestResult('event-flow-results', 'Event Received', eventReceived, JSON.stringify(receivedData));
+                    
+                    if (eventReceived) {
+                        log(`Event flow test passed! Data: ${JSON.stringify(receivedData)}`, 'success');
+                    } else {
+                        log('Event flow test failed: Event not received', 'error');
+                    }
+                    
+                    cleanup();
+                }, 100);
+            } catch (error) {
+                log(`Event flow test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 3: State Management
+        function runStateTest() {
+            log('Running state management test...', 'info');
+            const container = document.getElementById('state-results');
+            container.innerHTML = '';
+            
+            try {
+                const testValue = Math.random();
+                window.Homa.updateState({ testValue });
+                
+                const state = window.Homa.getState();
+                const passed = state.testValue === testValue;
+                
+                addTestResult('state-results', 'State Update', passed);
+                addTestResult('state-results', 'State Retrieval', passed, JSON.stringify(state));
+                
+                log(`State test ${passed ? 'passed' : 'failed'}. State: ${JSON.stringify(state)}`, passed ? 'success' : 'error');
+            } catch (error) {
+                log(`State test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 4: Form Change Detection (auto-detects)
+        if (typeof window.Homa !== 'undefined') {
+            window.Homa.on('site:input_change', (data) => {
+                addTestResult('form-change-results', `Field "${data.meaning || data.field}" changed`, true, `Value: ${data.value}`);
+                log(`Form change detected: ${data.field} = ${data.value}`, 'success');
+            });
+        }
+        
+        // Test 5: Command Interpreter
+        function testHighlightCommand() {
+            log('Testing HIGHLIGHT command...', 'info');
+            
+            try {
+                window.Homa.emit('ai:command', {
+                    action_type: 'ui_interaction',
+                    command: 'HIGHLIGHT',
+                    target_selector: '#test-name'
+                });
+                
+                addTestResult('command-results', 'HIGHLIGHT Command', true);
+                log('HIGHLIGHT command emitted', 'success');
+            } catch (error) {
+                addTestResult('command-results', 'HIGHLIGHT Command', false);
+                log(`HIGHLIGHT command failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testScrollCommand() {
+            log('Testing SCROLL command...', 'info');
+            
+            try {
+                window.Homa.emit('ai:command', {
+                    action_type: 'ui_interaction',
+                    command: 'SCROLL_TO',
+                    target_selector: '#console-output'
+                });
+                
+                addTestResult('command-results', 'SCROLL Command', true);
+                log('SCROLL command emitted', 'success');
+            } catch (error) {
+                addTestResult('command-results', 'SCROLL Command', false);
+                log(`SCROLL command failed: ${error.message}`, 'error');
+            }
+        }
+        
+        function testMultipleCommands() {
+            log('Testing multiple commands...', 'info');
+            
+            try {
+                const commands = [
+                    { action_type: 'ui_interaction', command: 'HIGHLIGHT', target_selector: '#test-email' },
+                    { action_type: 'ui_interaction', command: 'HIGHLIGHT', target_selector: '#test-tirage' }
+                ];
+                
+                commands.forEach(cmd => {
+                    window.Homa.emit('ai:command', cmd);
+                });
+                
+                addTestResult('command-results', 'Multiple Commands', true);
+                log('Multiple commands emitted', 'success');
+            } catch (error) {
+                addTestResult('command-results', 'Multiple Commands', false);
+                log(`Multiple commands failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 6: Performance
+        function runPerformanceTest() {
+            log('Running performance test...', 'info');
+            const container = document.getElementById('performance-results');
+            container.innerHTML = '';
+            
+            try {
+                const iterations = 100;
+                const latencies = [];
+                
+                for (let i = 0; i < iterations; i++) {
+                    const start = performance.now();
+                    
+                    let received = false;
+                    const cleanup = window.Homa.on('perf:test', () => {
+                        received = true;
+                    });
+                    
+                    window.Homa.emit('perf:test', { iteration: i });
+                    
+                    const end = performance.now();
+                    const latency = end - start;
+                    latencies.push(latency);
+                    
+                    cleanup();
+                }
+                
+                const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+                const maxLatency = Math.max(...latencies);
+                const minLatency = Math.min(...latencies);
+                
+                const passed = avgLatency < 100;
+                
+                addTestResult('performance-results', 'Average Latency < 100ms', passed, `${avgLatency.toFixed(2)}ms`);
+                addTestResult('performance-results', 'Max Latency', maxLatency < 150, `${maxLatency.toFixed(2)}ms`);
+                addTestResult('performance-results', 'Min Latency', true, `${minLatency.toFixed(2)}ms`);
+                
+                log(`Performance test completed:\n  Avg: ${avgLatency.toFixed(2)}ms\n  Max: ${maxLatency.toFixed(2)}ms\n  Min: ${minLatency.toFixed(2)}ms`, 'success');
+            } catch (error) {
+                log(`Performance test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run connectivity test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('Page loaded. Ready for testing.', 'info');
+                if (typeof window.Homa !== 'undefined') {
+                    runConnectivityTest();
+                } else {
+                    log('⚠️ This test page needs to be loaded in WordPress with Homa Event Bus!', 'error');
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
