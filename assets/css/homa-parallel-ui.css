@@ -1,0 +1,93 @@
+/**
+ * Homa Parallel UI - Main Styles
+ * Viewport Squeeze Logic and Layout System
+ */
+
+/* ========================================
+   Global Wrapper & Squeeze Engine
+   ======================================== */
+
+#homa-global-wrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999999;
+}
+
+#homa-site-view {
+    flex: 1 0 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transition: flex-basis 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+    will-change: flex-basis;
+    scrollbar-gutter: stable;
+}
+
+#homa-sidebar-view {
+    flex: 0 0 0%;
+    background: #ffffff;
+    transition: flex-basis 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+    border-left: 2px solid #eaeaea;
+    overflow: hidden;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Active State */
+body.homa-open #homa-site-view {
+    flex-basis: 70%;
+}
+
+body.homa-open #homa-sidebar-view {
+    flex-basis: 30%;
+}
+
+/* Fix Divi Elements */
+body.homa-open #main-header,
+body.homa-open .et-fixed-header {
+    width: 70% !important;
+    left: 0 !important;
+}
+
+/* Pulse Animation */
+@keyframes homa-pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 15px rgba(102, 126, 234, 0);
+    }
+}
+
+.homa-pulse {
+    animation: homa-pulse 1.5s ease-in-out 2;
+    border: 2px solid #667eea !important;
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    #homa-global-wrapper {
+        flex-direction: column;
+    }
+
+    body.homa-open #homa-site-view {
+        flex-basis: 60%;
+    }
+
+    body.homa-open #homa-sidebar-view {
+        flex-basis: 40%;
+        border-left: none;
+        border-top: 2px solid #eaeaea;
+    }
+
+    body.homa-open #main-header,
+    body.homa-open .et-fixed-header {
+        width: 100% !important;
+    }
+}
