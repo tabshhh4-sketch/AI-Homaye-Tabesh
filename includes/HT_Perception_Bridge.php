@@ -313,6 +313,11 @@ class HT_Perception_Bridge
         ];
 
         wp_localize_script('homa-indexer', 'homayePerceptionConfig', $config);
+        
+        // Also add to other scripts for consistency
+        wp_localize_script('homa-input-observer', 'homayePerceptionConfig', $config);
+        wp_localize_script('homa-spatial-navigator', 'homayePerceptionConfig', $config);
+        wp_localize_script('homa-tour-manager', 'homayePerceptionConfig', $config);
     }
 
     /**

@@ -15,7 +15,8 @@
      */
     class HomaInputObserver {
         constructor() {
-            this.config = window.homayeConfig || {};
+            // Use consistent config name
+            this.config = window.homayePerceptionConfig || window.homayeConfig || {};
             this.apiUrl = this.config.apiUrl || '/wp-json/homaye/v1/ai/analyze-intent';
             this.debounceDelay = this.config.inputDebounceDelay || 800; // Configurable delay
             this.minChars = this.config.inputMinChars || 3; // Configurable minimum chars
@@ -102,15 +103,8 @@
             const id = input.id?.toLowerCase() || '';
             const placeholder = input.getAttribute('placeholder')?.toLowerCase() || '';
             
-            const sensitiveKeywords = [
-                'password', 'passwd', 'pwd',
-                'credit', 'card', 'cvv', 'cvc',
-                'ssn', 'social', 'security',
-                'account', 'routing',
-                'national_id', 'کد_ملی', 'کدملی'
-            ];
-
-            return sensitiveKeywords.some(keyword => 
+            // Check against configured sensitive keywords
+            return Array.from(this.ignoredFields).some(keyword => 
                 name.includes(keyword) || 
                 id.includes(keyword) || 
                 placeholder.includes(keyword)

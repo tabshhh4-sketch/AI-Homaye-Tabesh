@@ -15,7 +15,8 @@
      */
     class HomaSpatialNavigator {
         constructor() {
-            this.config = window.homayeConfig || {};
+            // Use consistent config name
+            this.config = window.homayePerceptionConfig || window.homayeConfig || {};
             this.currentFocus = null;
             this.navigationHistory = [];
             this.maxHistoryLength = 50;

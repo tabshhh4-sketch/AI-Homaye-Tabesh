@@ -18,7 +18,8 @@
             this.map = new Map();
             this.fieldMap = new Map(); // Maps semantic names to elements
             this.observedElements = new WeakSet();
-            this.config = window.homayeConfig || {};
+            // Use consistent config name
+            this.config = window.homayePerceptionConfig || window.homayeConfig || {};
             this.init();
         }
 
@@ -89,8 +90,19 @@
             console.log(`Homa Indexer: Indexed ${indexedCount} new elements. Total: ${this.map.size}`);
             
             // Expose to window for debugging (in namespaced debug object)
+            // Using getter to prevent external modification
             if (!window.HomaDebug) window.HomaDebug = {};
-            window.HomaDebug.IndexerMap = this.map;
+            Object.defineProperty(window.HomaDebug, 'IndexerMap', {
+                get: () => {
+                    // Return a read-only representation
+                    const readOnlyMap = new Map();
+                    this.map.forEach((value, key) => {
+                        readOnlyMap.set(key, {...value});
+                    });
+                    return readOnlyMap;
+                },
+                enumerable: true
+            });
         }
 
         /**

@@ -15,7 +15,8 @@
      */
     class HomaTourManager {
         constructor() {
-            this.config = window.homayeConfig || {};
+            // Use consistent config name
+            this.config = window.homayePerceptionConfig || window.homayeConfig || {};
             this.activeTour = null;
             this.currentStep = 0;
             this.overlayElement = null;
