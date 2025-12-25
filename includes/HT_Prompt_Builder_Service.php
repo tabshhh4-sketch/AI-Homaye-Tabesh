@@ -62,6 +62,9 @@ class HT_Prompt_Builder_Service
         // Add persona context
         $instruction .= $this->get_persona_context($user_identifier);
         
+        // Add Omni-Store memory context (PR7)
+        $instruction .= $this->get_memory_context();
+        
         // Add WooCommerce context
         if ($this->woo_context->is_woocommerce_active()) {
             $instruction .= $this->get_woocommerce_context();
@@ -176,6 +179,29 @@ IDENTITY;
                 $context .= "- $recommendation\n";
             }
             $context .= "\n";
+        }
+        
+        return $context;
+    }
+
+    /**
+     * Get Omni-Store memory context (PR7)
+     *
+     * @return string Memory context
+     */
+    private function get_memory_context(): string
+    {
+        $memory_summary = HT_Vault_Manager::get_memory_summary();
+        $persona_prefix = HT_Persona_Engine::get_persona_prompt_prefix();
+        
+        $context = "## حافظه و زمینه (Omni-Store Memory)\n";
+        
+        if (!empty($memory_summary)) {
+            $context .= $memory_summary . "\n\n";
+        }
+        
+        if (!empty($persona_prefix)) {
+            $context .= $persona_prefix . "\n\n";
         }
         
         return $context;

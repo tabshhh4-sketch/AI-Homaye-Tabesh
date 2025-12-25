@@ -132,6 +132,12 @@ final class HT_Core
 
         // Initialize default knowledge base on first load
         add_action('init', [$this->knowledge, 'init_default_knowledge_base']);
+        
+        // Schedule cleanup cron job (PR7)
+        if (!wp_next_scheduled('homa_cleanup_expired_sessions')) {
+            wp_schedule_event(time(), 'daily', 'homa_cleanup_expired_sessions');
+        }
+        add_action('homa_cleanup_expired_sessions', [HT_Vault_Manager::class, 'cleanup_expired_sessions']);
     }
 
     /**
@@ -144,10 +150,14 @@ final class HT_Core
         // اتصال به REST API وردپرس
         add_action('rest_api_init', [$this->eyes, 'register_endpoints']);
         add_action('rest_api_init', [$this->ai_controller, 'register_endpoints']);
+        
+        // Initialize Vault REST API (PR7)
+        HT_Vault_REST_API::init();
 
         // تزریق اسکریپتهای ردیاب به فرانتئند (سازگار با Divi)
         add_action('wp_enqueue_scripts', [$this->eyes, 'enqueue_tracker']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_ui_executor']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_vault_scripts']);
 
         // Load admin assets
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
@@ -185,6 +195,30 @@ final class HT_Core
             HT_VERSION,
             true
         );
+    }
+
+    /**
+     * Enqueue Vault scripts for Omni-Store (PR7)
+     *
+     * @return void
+     */
+    public function enqueue_vault_scripts(): void
+    {
+        // Vault must load after Event Bus
+        wp_enqueue_script(
+            'homaye-tabesh-vault',
+            HT_PLUGIN_URL . 'assets/js/homa-vault.js',
+            ['homaye-tabesh-event-bus'],
+            HT_VERSION,
+            true
+        );
+
+        // Localize script with REST API config
+        wp_localize_script('homaye-tabesh-vault', 'homaConfig', [
+            'restUrl' => rest_url('homaye-tabesh/v1'),
+            'nonce' => wp_create_nonce('wp_rest'),
+            'homeUrl' => home_url()
+        ]);
     }
 
     /**
