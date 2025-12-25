@@ -250,6 +250,11 @@ class HT_Persona_Manager
         }
 
         foreach ($event_counts as $key => $count) {
+            // Validate key format before exploding
+            if (strpos($key, '_') === false) {
+                continue;
+            }
+            
             list($type, $class) = explode('_', $key, 2);
             $summary .= sprintf("- %s روی %s: %d بار\n", $type, $class, $count);
         }

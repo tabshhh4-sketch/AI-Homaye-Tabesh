@@ -130,9 +130,11 @@ final class HT_Core
 
     /**
      * Prevent unserialization
+     *
+     * @throws \Exception
      */
     public function __wakeup()
     {
-        throw new \Exception("Cannot unserialize singleton");
+        throw new \Exception('Unserialization of singleton HT_Core is not allowed');
     }
 }

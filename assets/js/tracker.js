@@ -61,11 +61,17 @@
         const events = [...eventQueue];
         eventQueue = [];
 
+        // Check for nonce
+        const nonce = config.nonce || '';
+        if (!nonce) {
+            console.warn('Homaye Tabesh - Missing nonce, events may not be recorded');
+        }
+
         fetch(batchUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-WP-Nonce': config.nonce || ''
+                'X-WP-Nonce': nonce
             },
             body: JSON.stringify({
                 events: events,

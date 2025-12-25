@@ -32,11 +32,17 @@ class HT_Gemini_Client
     private string $api_key;
 
     /**
+     * WooCommerce availability cache
+     */
+    private ?bool $woocommerce_active = null;
+
+    /**
      * Constructor
      */
     public function __construct()
     {
         $this->api_key = get_option('ht_gemini_api_key', '');
+        $this->woocommerce_active = class_exists('WooCommerce');
     }
 
     /**
@@ -244,7 +250,7 @@ class HT_Gemini_Client
      */
     public function get_woocommerce_context(array $product_ids = []): array
     {
-        if (!class_exists('WooCommerce')) {
+        if (!$this->woocommerce_active) {
             return [];
         }
 

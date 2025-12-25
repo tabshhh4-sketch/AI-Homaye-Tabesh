@@ -17,6 +17,11 @@ namespace HomayeTabesh;
 class HT_Telemetry
 {
     /**
+     * Cookie name for user identification
+     */
+    private const USER_COOKIE_NAME = 'ht_user_id';
+
+    /**
      * Register REST API endpoints
      *
      * @return void
@@ -283,11 +288,9 @@ class HT_Telemetry
             return 'user_' . get_current_user_id();
         }
 
-        // Use WordPress transient for guest identification
-        $cookie_name = 'ht_user_id';
-        
-        if (isset($_COOKIE[$cookie_name])) {
-            return sanitize_text_field($_COOKIE[$cookie_name]);
+        // Use WordPress cookie for guest identification
+        if (isset($_COOKIE[self::USER_COOKIE_NAME])) {
+            return sanitize_text_field($_COOKIE[self::USER_COOKIE_NAME]);
         }
 
         // Generate new identifier
@@ -295,7 +298,15 @@ class HT_Telemetry
         
         // Set cookie for 30 days
         if (!headers_sent()) {
-            setcookie($cookie_name, $user_id, time() + (30 * DAY_IN_SECONDS), COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
+            setcookie(
+                self::USER_COOKIE_NAME,
+                $user_id,
+                time() + (30 * DAY_IN_SECONDS),
+                COOKIEPATH,
+                COOKIE_DOMAIN,
+                is_ssl(),
+                true
+            );
         }
 
         return $user_id;

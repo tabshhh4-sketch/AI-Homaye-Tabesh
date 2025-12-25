@@ -40,7 +40,7 @@ class HT_Knowledge_Base
         $file_path = $this->kb_dir . $rule_type . '.json';
 
         if (!file_exists($file_path)) {
-            error_log("Homaye Tabesh - Knowledge base file not found: $file_path");
+            error_log(sprintf('Homaye Tabesh - Knowledge base file not found: %s', basename($file_path)));
             return [];
         }
 
@@ -48,7 +48,7 @@ class HT_Knowledge_Base
         $data = json_decode($content, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("Homaye Tabesh - Failed to parse knowledge base file: $file_path");
+            error_log(sprintf('Homaye Tabesh - Failed to parse knowledge base file: %s', basename($file_path)));
             return [];
         }
 
