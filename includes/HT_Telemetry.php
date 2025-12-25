@@ -39,6 +39,24 @@ class HT_Telemetry
             'callback' => [$this, 'handle_batch_events'],
             'permission_callback' => '__return_true',
         ]);
+        
+        register_rest_route('homaye/v1', '/context/woocommerce', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_woocommerce_context'],
+            'permission_callback' => '__return_true',
+        ]);
+        
+        register_rest_route('homaye/v1', '/persona/stats', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_persona_stats'],
+            'permission_callback' => '__return_true',
+        ]);
+        
+        register_rest_route('homaye/v1', '/trigger/check', [
+            'methods' => 'GET',
+            'callback' => [$this, 'check_ai_trigger'],
+            'permission_callback' => '__return_true',
+        ]);
     }
 
     /**
@@ -204,12 +222,21 @@ class HT_Telemetry
     ): void {
         $persona_manager = \HomayeTabesh\HT_Core::instance()->memory;
         
-        // Calculate score based on event type and element
-        $score_delta = $this->calculate_score_delta($event_type, $element_class, $element_data);
+        // Calculate base score based on event type
+        $base_score = $this->calculate_score_delta($event_type, $element_class, $element_data);
         
-        if ($score_delta !== 0) {
+        if ($base_score > 0) {
             $persona_type = $this->determine_persona_type($element_class, $element_data);
-            $persona_manager->add_score($user_identifier, $persona_type, $score_delta);
+            
+            // Use enhanced add_score with dynamic scoring
+            $persona_manager->add_score(
+                $user_identifier,
+                $persona_type,
+                $base_score,
+                $event_type,
+                $element_class,
+                is_array($element_data) ? $element_data : []
+            );
         }
     }
 
@@ -321,5 +348,66 @@ class HT_Telemetry
     {
         $theme = wp_get_theme();
         return $theme->get('Name') === 'Divi' || $theme->get('Template') === 'Divi';
+    }
+    
+    /**
+     * Get WooCommerce context endpoint
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response
+     */
+    public function get_woocommerce_context(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $woo_context = \HomayeTabesh\HT_Core::instance()->woo_context;
+        $product_id = $request->get_param('product_id');
+        
+        $context = $woo_context->get_full_context($product_id ? intval($product_id) : null);
+        
+        return new \WP_REST_Response([
+            'success' => true,
+            'context' => $context,
+        ], 200);
+    }
+    
+    /**
+     * Get persona statistics endpoint
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response
+     */
+    public function get_persona_stats(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $user_identifier = $request->get_param('user_id') ?? $this->get_user_identifier();
+        $persona_manager = \HomayeTabesh\HT_Core::instance()->memory;
+        
+        $analysis = $persona_manager->get_full_analysis($user_identifier);
+        
+        return new \WP_REST_Response([
+            'success' => true,
+            'user_id' => $user_identifier,
+            'analysis' => $analysis,
+        ], 200);
+    }
+    
+    /**
+     * Check AI trigger endpoint
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response
+     */
+    public function check_ai_trigger(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $user_identifier = $request->get_param('user_id') ?? $this->get_user_identifier();
+        $decision_trigger = \HomayeTabesh\HT_Core::instance()->decision_trigger;
+        
+        $trigger_check = $decision_trigger->should_trigger_ai($user_identifier);
+        $stats = $decision_trigger->get_trigger_stats($user_identifier);
+        
+        return new \WP_REST_Response([
+            'success' => true,
+            'user_id' => $user_identifier,
+            'trigger' => $trigger_check,
+            'stats' => $stats,
+        ], 200);
     }
 }
