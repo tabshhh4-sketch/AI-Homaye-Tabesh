@@ -283,16 +283,22 @@ class HT_Telemetry
             return 'user_' . get_current_user_id();
         }
 
-        // Use session or cookie-based identifier
-        if (!session_id()) {
-            session_start();
+        // Use WordPress transient for guest identification
+        $cookie_name = 'ht_user_id';
+        
+        if (isset($_COOKIE[$cookie_name])) {
+            return sanitize_text_field($_COOKIE[$cookie_name]);
         }
 
-        if (empty($_SESSION['ht_user_id'])) {
-            $_SESSION['ht_user_id'] = 'guest_' . wp_generate_uuid4();
+        // Generate new identifier
+        $user_id = 'guest_' . wp_generate_uuid4();
+        
+        // Set cookie for 30 days
+        if (!headers_sent()) {
+            setcookie($cookie_name, $user_id, time() + (30 * DAY_IN_SECONDS), COOKIEPATH, COOKIE_DOMAIN, is_ssl(), true);
         }
 
-        return $_SESSION['ht_user_id'];
+        return $user_id;
     }
 
     /**

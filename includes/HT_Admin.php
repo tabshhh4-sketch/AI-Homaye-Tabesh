@@ -81,7 +81,124 @@ class HT_Admin
         register_setting('homaye_tabesh_settings', 'ht_min_score_threshold', [
             'type' => 'integer',
             'default' => 50,
+            'sanitize_callback' => 'absint',
         ]);
+
+        // Add settings section
+        add_settings_section(
+            'ht_main_section',
+            __('تنظیمات اصلی', 'homaye-tabesh'),
+            null,
+            'homaye-tabesh'
+        );
+
+        // Add settings fields
+        add_settings_field(
+            'ht_gemini_api_key',
+            __('کلید API گوگل Gemini', 'homaye-tabesh'),
+            [$this, 'render_api_key_field'],
+            'homaye-tabesh',
+            'ht_main_section'
+        );
+
+        add_settings_field(
+            'ht_tracking_enabled',
+            __('ردیابی رفتار', 'homaye-tabesh'),
+            [$this, 'render_tracking_field'],
+            'homaye-tabesh',
+            'ht_main_section'
+        );
+
+        add_settings_field(
+            'ht_divi_integration',
+            __('یکپارچه‌سازی با Divi', 'homaye-tabesh'),
+            [$this, 'render_divi_field'],
+            'homaye-tabesh',
+            'ht_main_section'
+        );
+
+        add_settings_field(
+            'ht_min_score_threshold',
+            __('حداقل امتیاز پرسونا', 'homaye-tabesh'),
+            [$this, 'render_threshold_field'],
+            'homaye-tabesh',
+            'ht_main_section'
+        );
+    }
+
+    /**
+     * Render API key field
+     */
+    public function render_api_key_field(): void
+    {
+        $value = get_option('ht_gemini_api_key', '');
+        ?>
+        <input type="text" 
+               id="ht_gemini_api_key" 
+               name="ht_gemini_api_key" 
+               value="<?php echo esc_attr($value); ?>" 
+               class="regular-text"
+               placeholder="AIza...">
+        <p class="description">
+            کلید API خود را از 
+            <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a> 
+            دریافت کنید.
+        </p>
+        <?php
+    }
+
+    /**
+     * Render tracking field
+     */
+    public function render_tracking_field(): void
+    {
+        $value = get_option('ht_tracking_enabled', true);
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="ht_tracking_enabled" 
+                   value="1" 
+                   <?php checked($value); ?>>
+            فعال‌سازی ردیابی رفتار کاربران
+        </label>
+        <?php
+    }
+
+    /**
+     * Render Divi integration field
+     */
+    public function render_divi_field(): void
+    {
+        $value = get_option('ht_divi_integration', true);
+        ?>
+        <label>
+            <input type="checkbox" 
+                   name="ht_divi_integration" 
+                   value="1" 
+                   <?php checked($value); ?>>
+            فعال‌سازی ردیابی خودکار المان‌های Divi
+        </label>
+        <?php
+    }
+
+    /**
+     * Render threshold field
+     */
+    public function render_threshold_field(): void
+    {
+        $value = get_option('ht_min_score_threshold', 50);
+        ?>
+        <input type="number" 
+               id="ht_min_score_threshold" 
+               name="ht_min_score_threshold" 
+               value="<?php echo esc_attr($value); ?>" 
+               min="0" 
+               max="1000"
+               step="10">
+        <p class="description">
+            حداقل امتیازی که یک کاربر باید کسب کند تا پرسونا شناسایی شود.
+        </p>
+        <?php
     }
 
     /**
@@ -93,93 +210,16 @@ class HT_Admin
             return;
         }
 
-        // Save settings
-        if (isset($_POST['submit']) && check_admin_referer('homaye_tabesh_settings')) {
-            update_option('ht_gemini_api_key', sanitize_text_field($_POST['ht_gemini_api_key'] ?? ''));
-            update_option('ht_tracking_enabled', isset($_POST['ht_tracking_enabled']));
-            update_option('ht_divi_integration', isset($_POST['ht_divi_integration']));
-            update_option('ht_min_score_threshold', absint($_POST['ht_min_score_threshold'] ?? 50));
-
-            echo '<div class="notice notice-success"><p>تنظیمات با موفقیت ذخیره شد.</p></div>';
-        }
-
-        $api_key = get_option('ht_gemini_api_key', '');
-        $tracking_enabled = get_option('ht_tracking_enabled', true);
-        $divi_integration = get_option('ht_divi_integration', true);
-        $min_threshold = get_option('ht_min_score_threshold', 50);
         ?>
         <div class="wrap homaye-tabesh-admin">
             <h1><?php echo esc_html__('تنظیمات همای تابش', 'homaye-tabesh'); ?></h1>
             
-            <form method="post" action="">
-                <?php wp_nonce_field('homaye_tabesh_settings'); ?>
-                
-                <table class="form-table homaye-tabesh-settings">
-                    <tr>
-                        <th scope="row">
-                            <label for="ht_gemini_api_key">کلید API گوگل Gemini</label>
-                        </th>
-                        <td>
-                            <input type="text" 
-                                   id="ht_gemini_api_key" 
-                                   name="ht_gemini_api_key" 
-                                   value="<?php echo esc_attr($api_key); ?>" 
-                                   class="regular-text"
-                                   placeholder="AIza...">
-                            <p class="description">
-                                کلید API خود را از 
-                                <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a> 
-                                دریافت کنید.
-                            </p>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">ردیابی رفتار</th>
-                        <td>
-                            <label>
-                                <input type="checkbox" 
-                                       name="ht_tracking_enabled" 
-                                       value="1" 
-                                       <?php checked($tracking_enabled); ?>>
-                                فعال‌سازی ردیابی رفتار کاربران
-                            </label>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">یکپارچه‌سازی با Divi</th>
-                        <td>
-                            <label>
-                                <input type="checkbox" 
-                                       name="ht_divi_integration" 
-                                       value="1" 
-                                       <?php checked($divi_integration); ?>>
-                                فعال‌سازی ردیابی خودکار المان‌های Divi
-                            </label>
-                        </td>
-                    </tr>
-                    
-                    <tr>
-                        <th scope="row">
-                            <label for="ht_min_score_threshold">حداقل امتیاز پرسونا</label>
-                        </th>
-                        <td>
-                            <input type="number" 
-                                   id="ht_min_score_threshold" 
-                                   name="ht_min_score_threshold" 
-                                   value="<?php echo esc_attr($min_threshold); ?>" 
-                                   min="0" 
-                                   max="1000"
-                                   step="10">
-                            <p class="description">
-                                حداقل امتیازی که یک کاربر باید کسب کند تا پرسونا شناسایی شود.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-                
-                <?php submit_button('ذخیره تنظیمات'); ?>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('homaye_tabesh_settings');
+                do_settings_sections('homaye-tabesh');
+                submit_button('ذخیره تنظیمات');
+                ?>
             </form>
 
             <hr>
@@ -212,7 +252,7 @@ class HT_Admin
                     </tr>
                     <tr>
                         <td><strong>API Key تنظیم شده:</strong></td>
-                        <td><?php echo !empty($api_key) ? '✓ بله' : '✗ خیر'; ?></td>
+                        <td><?php echo !empty(get_option('ht_gemini_api_key')) ? '✓ بله' : '✗ خیر'; ?></td>
                     </tr>
                 </tbody>
             </table>

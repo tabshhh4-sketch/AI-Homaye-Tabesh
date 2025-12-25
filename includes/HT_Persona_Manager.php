@@ -34,9 +34,8 @@ class HT_Persona_Manager
      */
     public function init_session(): void
     {
-        if (!session_id() && !headers_sent()) {
-            session_start();
-        }
+        // Session initialization is no longer needed
+        // We use cookies for guest identification
     }
 
     /**
