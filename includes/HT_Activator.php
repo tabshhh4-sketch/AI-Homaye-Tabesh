@@ -99,6 +99,64 @@ class HT_Activator
         ) $charset_collate;";
 
         dbDelta($sql);
+
+        // Create Omni-Store vault table (PR7)
+        $table_name = $wpdb->prefix . 'homa_vault';
+
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) DEFAULT NULL,
+            session_token varchar(100) NOT NULL,
+            context_key varchar(50) NOT NULL,
+            context_value json,
+            ai_insight text,
+            updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            KEY user_id (user_id),
+            KEY session_token (session_token),
+            KEY context_key (context_key),
+            KEY updated_at (updated_at)
+        ) $charset_collate;";
+
+        dbDelta($sql);
+
+        // Create Omni-Store sessions table (PR7)
+        $table_name = $wpdb->prefix . 'homa_sessions';
+
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            session_token varchar(100) NOT NULL,
+            last_url text,
+            form_snapshot json DEFAULT NULL,
+            chat_summary text,
+            updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            expires_at datetime DEFAULT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY session_token (session_token),
+            KEY updated_at (updated_at),
+            KEY expires_at (expires_at)
+        ) $charset_collate;";
+
+        dbDelta($sql);
+
+        // Create Omni-Store user interests table (PR7)
+        $table_name = $wpdb->prefix . 'homa_user_interests';
+
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            user_id_or_token varchar(100) NOT NULL,
+            category_slug varchar(50) NOT NULL,
+            interest_score int(11) DEFAULT 0,
+            source_referral varchar(50) DEFAULT 'organic',
+            last_interaction timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY user_category (user_id_or_token, category_slug),
+            KEY user_id_or_token (user_id_or_token),
+            KEY category_slug (category_slug),
+            KEY interest_score (interest_score)
+        ) $charset_collate;";
+
+        dbDelta($sql);
     }
 
     /**
