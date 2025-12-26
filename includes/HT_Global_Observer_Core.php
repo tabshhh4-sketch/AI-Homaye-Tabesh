@@ -254,7 +254,6 @@ class HT_Global_Observer_Core
         self::$is_processing = true;
 
         try {
-
             $monitored = $this->scanner->get_monitored_plugins();
 
             foreach ($options['plugins'] as $plugin_path) {

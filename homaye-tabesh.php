@@ -89,14 +89,7 @@ add_action('plugins_loaded', function () {
         // Use safe loader instead of direct instantiation
         if (class_exists('\HomayeTabesh\HT_Loader')) {
             $loader = \HomayeTabesh\HT_Loader::instance();
-            
-            // Only boot if not in admin or if doing AJAX
-            if (!is_admin() || wp_doing_ajax()) {
-                $loader->boot();
-            } else {
-                // In admin, always boot for settings page
-                $loader->boot();
-            }
+            $loader->boot();
         } else {
             // Fallback to direct instantiation if loader not available
             \HomayeTabesh\HT_Core::instance();

@@ -152,6 +152,6 @@ class HT_Loader
      */
     public function __wakeup()
     {
-        throw new \Exception('Unserialization of HT_Loader is not allowed');
+        throw new \LogicException('Unserialization of HT_Loader is not allowed');
     }
 }

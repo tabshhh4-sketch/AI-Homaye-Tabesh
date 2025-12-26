@@ -20,6 +20,8 @@ class HT_Hook_Observer_Service
 {
     /**
      * Recursion guard - prevents infinite loops
+     * Note: This protects against same-request recursion. WordPress/PHP
+     * runs in a single-threaded per-request model, so this is sufficient.
      */
     private static bool $is_processing = false;
 
