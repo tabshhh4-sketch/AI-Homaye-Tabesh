@@ -282,6 +282,11 @@ final class HT_Core
     public ?HT_Auto_Cleanup $auto_cleanup = null;
 
     /**
+     * Resilience REST API (PR18 - Resilience Endpoints)
+     */
+    public ?HT_Resilience_REST_API $resilience_api = null;
+
+    /**
      * Get singleton instance
      *
      * @return self
@@ -388,6 +393,7 @@ final class HT_Core
         $this->background_processor = new HT_Background_Processor();
         $this->numerical_formatter = new HT_Numerical_Formatter();
         $this->auto_cleanup = new HT_Auto_Cleanup();
+        $this->resilience_api = new HT_Resilience_REST_API();
 
         // Initialize default knowledge base on first load
         add_action('init', [$this->knowledge, 'init_default_knowledge_base']);
@@ -520,6 +526,7 @@ final class HT_Core
         add_action('rest_api_init', [$this->chat_capabilities, 'register_endpoints']); // PR15
         add_action('rest_api_init', [$this->security_alerts, 'register_endpoints']); // PR15
         add_action('rest_api_init', [$this->access_control, 'register_endpoints']); // PR16
+        add_action('rest_api_init', [$this->resilience_api, 'register_endpoints']); // PR18
         
         // Initialize Vault REST API (PR7)
         HT_Vault_REST_API::init();
