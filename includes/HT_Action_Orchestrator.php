@@ -584,11 +584,13 @@ class HT_Action_Orchestrator
     {
         $rollback_data = $result['rollback_data'] ?? [];
 
-        // Rollback order creation
+        // Rollback order creation - set to cancelled status instead of deleting
         if (isset($rollback_data['order_id'])) {
             $order = wc_get_order($rollback_data['order_id']);
             if ($order) {
-                $order->delete(true); // Force delete
+                // Cancel order instead of deleting to maintain audit trail
+                $order->update_status('cancelled', 'Order cancelled due to action orchestrator rollback');
+                $order->save();
             }
         }
 

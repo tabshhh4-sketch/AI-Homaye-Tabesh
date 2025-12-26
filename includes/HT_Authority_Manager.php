@@ -483,7 +483,7 @@ class HT_Authority_Manager
             case 'float':
                 return (float)$value;
             case 'boolean':
-                return (bool)$value;
+                return $value === '1';
             default:
                 return $value;
         }

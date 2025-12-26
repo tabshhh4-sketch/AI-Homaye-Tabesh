@@ -187,10 +187,12 @@ class HT_Feedback_System
             'created_at' => current_time('mysql'),
         ];
 
+        $format = ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'];
+
         $inserted = $wpdb->insert(
             $this->table_name,
             $data,
-            ['%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s']
+            $format
         );
 
         if ($inserted) {
@@ -212,7 +214,7 @@ class HT_Feedback_System
             return $tracker->get_user_fingerprint();
         }
 
-        return 'guest_' . $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        return 'guest_' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown');
     }
 
     /**
@@ -317,15 +319,18 @@ class HT_Feedback_System
             'reviewer_id' => get_current_user_id(),
         ];
 
+        $format = ['%s', '%s', '%d'];
+
         if ($admin_notes) {
             $data['admin_notes'] = $admin_notes;
+            $format[] = '%s';
         }
 
         $result = $wpdb->update(
             $this->table_name,
             $data,
             ['id' => $feedback_id],
-            ['%s', '%s', '%d', '%s'],
+            $format,
             ['%d']
         );
 
