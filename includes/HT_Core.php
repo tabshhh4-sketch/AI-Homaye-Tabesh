@@ -152,6 +152,16 @@ final class HT_Core
     public ?HT_PostPurchase_REST_API $postpurchase_api = null;
 
     /**
+     * Global Observer Core (PR13 - Central Plugin Monitoring)
+     */
+    public ?HT_Global_Observer_Core $global_observer = null;
+
+    /**
+     * Global Observer API (PR13 - Observer REST API)
+     */
+    public ?HT_Global_Observer_API $observer_api = null;
+
+    /**
      * Get singleton instance
      *
      * @return self
@@ -221,6 +231,10 @@ final class HT_Core
         // Initialize hook observers (PR12)
         $this->hook_observer->init_observers();
 
+        // Initialize PR13 - Global Observer Core
+        $this->global_observer = HT_Global_Observer_Core::instance();
+        $this->observer_api = new HT_Global_Observer_API();
+
         // Initialize default knowledge base on first load
         add_action('init', [$this->knowledge, 'init_default_knowledge_base']);
         
@@ -267,6 +281,7 @@ final class HT_Core
         add_action('rest_api_init', [$this->atlas_api, 'register_endpoints']);
         add_action('rest_api_init', [$this->lead_api, 'register_endpoints']); // PR11
         add_action('rest_api_init', [$this->postpurchase_api, 'register_endpoints']); // PR12
+        add_action('rest_api_init', [$this->observer_api, 'register_endpoints']); // PR13
         
         // Initialize Vault REST API (PR7)
         HT_Vault_REST_API::init();

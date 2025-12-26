@@ -64,6 +64,7 @@ class HT_Metadata_Mining_Engine
             'plugin_slug' => $plugin_slug,
             'extraction_time' => current_time('mysql'),
             'options' => [],
+            'options_human' => [],
             'tables' => [],
             'capabilities' => [],
             'facts' => [],
@@ -71,6 +72,9 @@ class HT_Metadata_Mining_Engine
 
         // استخراج تنظیمات
         $metadata['options'] = $this->scanner->get_plugin_options($plugin_slug);
+
+        // تبدیل به متن انسانی (Commit 2 Enhancement)
+        $metadata['options_human'] = $this->convert_options_to_human($metadata['options'], $plugin_slug);
 
         // استخراج جداول
         $metadata['tables'] = $this->scanner->scan_plugin_tables($plugin_slug);
@@ -82,6 +86,110 @@ class HT_Metadata_Mining_Engine
         $metadata['facts'] = $this->extract_plugin_facts($plugin_slug);
 
         return $metadata;
+    }
+
+    /**
+     * Convert technical options to human-readable text
+     * 
+     * @param array $options تنظیمات فنی
+     * @param string $plugin_slug اسلاگ افزونه
+     * @return array متن انسانی
+     */
+    private function convert_options_to_human(array $options, string $plugin_slug): array
+    {
+        $human_readable = [];
+
+        // نگاشت‌های عمومی
+        $general_mappings = [
+            'enabled' => 'وضعیت: %s',
+            'enable' => 'فعال‌سازی: %s',
+            'disabled' => 'غیرفعال: %s',
+            'currency' => 'واحد پول: %s',
+            'price' => 'قیمت: %s تومان',
+            'cost' => 'هزینه: %s تومان',
+            'tax' => 'مالیات: %s',
+            'shipping' => 'ارسال: %s',
+            'status' => 'وضعیت: %s',
+        ];
+
+        // نگاشت‌های خاص WooCommerce
+        $woo_mappings = [
+            'woocommerce_currency' => 'واحد پول فروشگاه: %s',
+            'woocommerce_enable_guest_checkout' => 'خرید مهمان: %s',
+            'woocommerce_enable_signup_and_login_from_checkout' => 'ثبت‌نام از صفحه پرداخت: %s',
+            'woocommerce_enable_reviews' => 'نظرات محصولات: %s',
+            'woocommerce_calc_taxes' => 'محاسبه مالیات: %s',
+            'woocommerce_prices_include_tax' => 'قیمت‌ها شامل مالیات',
+            'woocommerce_ship_to_countries' => 'ارسال به کشورها: %s',
+            'woocommerce_allowed_countries' => 'کشورهای مجاز: %s',
+            'woocommerce_default_country' => 'کشور پیش‌فرض: %s',
+        ];
+
+        foreach ($options as $key => $value) {
+            // چک کردن نگاشت‌های خاص WooCommerce
+            if ($plugin_slug === 'woocommerce' && isset($woo_mappings[$key])) {
+                $formatted = sprintf($woo_mappings[$key], $this->format_value($value));
+                $human_readable[$key] = $formatted;
+                continue;
+            }
+
+            // چک کردن نگاشت‌های عمومی
+            foreach ($general_mappings as $pattern => $template) {
+                if (stripos($key, $pattern) !== false) {
+                    $formatted = sprintf($template, $this->format_value($value));
+                    $human_readable[$key] = $formatted;
+                    continue 2;
+                }
+            }
+
+            // برای option های بدون نگاشت مشخص
+            $human_readable[$key] = $this->generate_generic_human_text($key, $value);
+        }
+
+        return $human_readable;
+    }
+
+    /**
+     * Format option value for display
+     * 
+     * @param mixed $value مقدار
+     * @return string مقدار فرمت شده
+     */
+    private function format_value($value): string
+    {
+        if ($value === 'yes' || $value === true || $value === '1') {
+            return 'فعال';
+        }
+
+        if ($value === 'no' || $value === false || $value === '0' || $value === '') {
+            return 'غیرفعال';
+        }
+
+        if (is_array($value)) {
+            return implode(', ', array_slice($value, 0, 3));
+        }
+
+        if (is_numeric($value)) {
+            return number_format((float)$value, 0, '.', ',');
+        }
+
+        return (string) $value;
+    }
+
+    /**
+     * Generate generic human-readable text
+     * 
+     * @param string $key کلید
+     * @param mixed $value مقدار
+     * @return string متن انسانی
+     */
+    private function generate_generic_human_text(string $key, $value): string
+    {
+        // پاک‌سازی نام کلید
+        $clean_key = str_replace(['_', '-'], ' ', $key);
+        $formatted_value = $this->format_value($value);
+
+        return "{$clean_key}: {$formatted_value}";
     }
 
     /**
@@ -203,9 +311,23 @@ class HT_Metadata_Mining_Engine
                 }
             }
 
+            // تنظیمات قابل فهم انسانی (Commit 2 Enhancement)
+            if (!empty($data['options_human'])) {
+                $kb .= "\nتنظیمات فعلی:\n";
+                $count = 0;
+                foreach ($data['options_human'] as $key => $human_text) {
+                    $kb .= "- {$human_text}\n";
+                    $count++;
+                    // محدود کردن به 10 تنظیم مهم برای جلوگیری از شلوغی
+                    if ($count >= 10) {
+                        break;
+                    }
+                }
+            }
+
             // قابلیت‌های کلی
             if (!empty($data['capabilities']['features'])) {
-                $kb .= "قابلیت‌ها: " . implode(', ', $data['capabilities']['features']) . "\n";
+                $kb .= "\nقابلیت‌های اصلی: " . implode(', ', $data['capabilities']['features']) . "\n";
             }
 
             $kb .= "\n";
