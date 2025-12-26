@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست PR13 - ناظر کل (Global Inspector)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Tahoma', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            direction: rtl;
+            text-align: right;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-right: 4px solid #667eea;
+        }
+
+        .test-section h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .test-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .test-item h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .test-item p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .test-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        .test-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin: 2px;
+        }
+
+        .badge.commit {
+            background: #667eea;
+            color: white;
+        }
+
+        .badge.feature {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .status-indicator.active {
+            background: #28a745;
+        }
+
+        .status-indicator.inactive {
+            background: #dc3545;
+        }
+
+        .code-block {
+            background: #272822;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .legend {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .legend h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .legend ul {
+            list-style: none;
+            padding-right: 20px;
+        }
+
+        .legend li {
+            color: #856404;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 تست PR13 - ناظر کل</h1>
+        <p class="subtitle">سیستم ایندکسگذاری خودکار و پایش یکپارچه اکوسیستم</p>
+
+        <div class="legend">
+            <h3>🎯 هدف PR13</h3>
+            <ul>
+                <li>✅ Commit 1: HT_Global_Observer_Core - مدیریت مرکزی نظارت</li>
+                <li>✅ Commit 2: Plugin_Metadata_Extractor - نگاشت انسانی</li>
+                <li>✅ Commit 3: Auto_KB_Synchronizer - همگام‌سازی خودکار</li>
+                <li>✅ Commit 4: Admin_Observer_Settings - رابط کاربری</li>
+                <li>✅ Commit 5: Safety_Data_Sanitizer - فیلتر امنیتی</li>
+            </ul>
+        </div>
+
+        <!-- Test 1: Observer Status -->
+        <div class="test-section">
+            <h2>تست 1: وضعیت ناظر کل <span class="badge commit">Commit 1</span></h2>
+            <div class="test-item">
+                <h3>دریافت خلاصه وضعیت</h3>
+                <p>این تست وضعیت کلی سیستم ناظر را بررسی می‌کند.</p>
+                <button class="test-button" onclick="testObserverStatus()">اجرای تست</button>
+                <div id="result-observer-status"></div>
+            </div>
+        </div>
+
+        <!-- Test 2: Plugin List -->
+        <div class="test-section">
+            <h2>تست 2: لیست افزونه‌ها <span class="badge commit">Commit 1</span> <span class="badge commit">Commit 4</span></h2>
+            <div class="test-item">
+                <h3>دریافت لیست افزونه‌های نصب شده</h3>
+                <p>این تست لیست تمام افزونه‌های نصب شده و وضعیت نظارت آن‌ها را نمایش می‌دهد.</p>
+                <button class="test-button" onclick="testPluginsList()">اجرای تست</button>
+                <div id="result-plugins-list"></div>
+            </div>
+        </div>
+
+        <!-- Test 3: Metadata Extraction -->
+        <div class="test-section">
+            <h2>تست 3: استخراج متادیتا <span class="badge commit">Commit 2</span></h2>
+            <div class="test-item">
+                <h3>استخراج و نگاشت انسانی تنظیمات</h3>
+                <p>این تست متادیتای افزونه‌ها را استخراج و به متن قابل فهم تبدیل می‌کند.</p>
+                <button class="test-button" onclick="testMetadataExtraction()">اجرای تست</button>
+                <div id="result-metadata"></div>
+            </div>
+        </div>
+
+        <!-- Test 4: KB Sync -->
+        <div class="test-section">
+            <h2>تست 4: همگام‌سازی Knowledge Base <span class="badge commit">Commit 3</span></h2>
+            <div class="test-item">
+                <h3>به‌روزرسانی پایگاه دانش</h3>
+                <p>این تست فرآیند رفرش متادیتا و همگام‌سازی با Knowledge Base را بررسی می‌کند.</p>
+                <button class="test-button" onclick="testKBSync()">اجرای تست</button>
+                <div id="result-kb-sync"></div>
+            </div>
+        </div>
+
+        <!-- Test 5: Recent Changes -->
+        <div class="test-section">
+            <h2>تست 5: تغییرات اخیر <span class="badge commit">Commit 1</span></h2>
+            <div class="test-item">
+                <h3>دریافت لاگ تغییرات</h3>
+                <p>این تست رویدادهای اخیر ثبت شده توسط ناظر را نمایش می‌دهد.</p>
+                <button class="test-button" onclick="testRecentChanges()">اجرای تست</button>
+                <div id="result-changes"></div>
+            </div>
+        </div>
+
+        <!-- Test 6: Recent Facts -->
+        <div class="test-section">
+            <h2>تست 6: فکت‌های استخراج شده <span class="badge commit">Commit 3</span></h2>
+            <div class="test-item">
+                <h3>دریافت فکت‌های Knowledge Base</h3>
+                <p>این تست فکت‌هایی که از افزونه‌ها استخراج شده‌اند را نمایش می‌دهد.</p>
+                <button class="test-button" onclick="testRecentFacts()">اجرای تست</button>
+                <div id="result-facts"></div>
+            </div>
+        </div>
+
+        <!-- Test 7: Data Sanitization -->
+        <div class="test-section">
+            <h2>تست 7: فیلتر امنیتی <span class="badge commit">Commit 5</span></h2>
+            <div class="test-item">
+                <h3>بررسی سانیتایز داده‌های حساس</h3>
+                <p>این تست نمایش می‌دهد که داده‌های حساس به درستی فیلتر می‌شوند.</p>
+                <button class="test-button" onclick="testSanitization()">اجرای تست</button>
+                <div id="result-sanitization"></div>
+            </div>
+        </div>
+
+        <!-- Test 8: Add/Remove Monitoring -->
+        <div class="test-section">
+            <h2>تست 8: مدیریت نظارت <span class="badge commit">Commit 4</span></h2>
+            <div class="test-item">
+                <h3>اضافه/حذف افزونه از نظارت</h3>
+                <p>توجه: این تست فقط در صورتی کار می‌کند که افزونه Akismet نصب باشد.</p>
+                <button class="test-button" onclick="testAddMonitoring()">اضافه به نظارت</button>
+                <button class="test-button" onclick="testRemoveMonitoring()">حذف از نظارت</button>
+                <div id="result-monitoring"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تنظیمات API
+        const API_BASE = '/wp-json/homaye/v1';
+        let wpNonce = '';
+
+        // دریافت nonce از WordPress
+        function getWPNonce() {
+            // در محیط واقعی WordPress، nonce از localized script آمده
+            // برای تست، از cookie یا متغیر global استفاده می‌شود
+            if (typeof wpApiSettings !== 'undefined') {
+                return wpApiSettings.nonce;
+            }
+            return '';
+        }
+
+        wpNonce = getWPNonce();
+
+        // تابع کمکی برای نمایش نتایج
+        function showResult(elementId, data, type = 'info') {
+            const resultDiv = document.getElementById(elementId);
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+        }
+
+        // تست 1: وضعیت ناظر
+        async function testObserverStatus() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'در حال اجرا...';
+
+            try {
+                const response = await fetch(API_BASE + '/observer/status', {
+                    method: 'GET',
+                    headers: {
+                        'X-WP-Nonce': wpNonce
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('result-observer-status', {
+                        '✅ تعداد افزونه‌های تحت نظر': data.data.monitored_count,
+                        '✅ افزونه‌های فعال': data.data.active_count,
+                        '✅ آخرین همگام‌سازی': data.data.last_sync,
+                        'جزئیات': data.data
+                    }, 'success');
+                } else {
+                    showResult('result-observer-status', data, 'error');
+                }
+            } catch (error) {
+                showResult('result-observer-status', {error: error.message}, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'اجرای تست';
+            }
+        }
+
+        // تست 2: لیست افزونه‌ها
+        async function testPluginsList() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'در حال اجرا...';
+
+            try {
+                const response = await fetch(API_BASE + '/observer/plugins', {
+                    method: 'GET',
+                    headers: {
+                        'X-WP-Nonce': wpNonce
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const plugins = data.data.map(p => ({
+                        نام: p.name,
+                        نسخه: p.version,
+                        فعال: p.is_active ? '✅' : '❌',
+                        'تحت نظر': p.is_monitored ? '✅' : '➖'
+                    }));
+                    
+                    showResult('result-plugins-list', {
+                        'تعداد کل': data.data.length,
+                        'افزونه‌ها': plugins.slice(0, 10) // فقط 10 تای اول
+                    }, 'success');
+                } else {
+                    showResult('result-plugins-list', data, 'error');
+                }
+            } catch (error) {
+                showResult('result-plugins-list', {error: error.message}, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'اجرای تست';
+            }
+        }
+
+        // تست 3: استخراج متادیتا
+        async function testMetadataExtraction() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'در حال اجرا...';
+
+            try {
+                const response = await fetch(API_BASE + '/observer/metadata', {
+                    method: 'GET',
+                    headers: {
+                        'X-WP-Nonce': wpNonce
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const summary = {};
+                    for (const [slug, metadata] of Object.entries(data.data)) {
+                        summary[slug] = {
+                            'تاریخ استخراج': metadata.extraction_time,
+                            'تعداد تنظیمات انسانی': metadata.options_human ? Object.keys(metadata.options_human).length : 0,
+                            'قابلیت‌ها': metadata.capabilities?.features || []
+                        };
+                    }
+                    
+                    showResult('result-metadata', {
+                        'تعداد افزونه‌ها': Object.keys(data.data).length,
+                        'خلاصه': summary
+                    }, 'success');
+                } else {
+                    showResult('result-metadata', data, 'error');
+                }
+            } catch (error) {
+                showResult('result-metadata', {error: error.message}, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'اجرای تست';
+            }
+        }
+
+        // تست 4: همگام‌سازی KB
+        async function testKBSync() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'در حال اجرا...';
+
+            try {
+                const response = await fetch(API_BASE + '/observer/refresh', {
+                    method: 'POST',
+                    headers: {
+                        'X-WP-Nonce': wpNonce
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('result-kb-sync', {
+                        '✅ وضعیت': data.message,
+                        'تعداد افزونه‌ها': data.data.plugins_count,
+                        'آخرین همگام‌سازی': data.data.last_sync
+                    }, 'success');
+                } else {
+                    showResult('result-kb-sync', data, 'error');
+                }
+            } catch (error) {
+                showResult('result-kb-sync', {error: error.message}, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'اجرای تست';
+            }
+        }
+
+        // تست 5: تغییرات اخیر
+        async function testRecentChanges() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'در حال اجرا...';
+
+            try {
+                const response = await fetch(API_BASE + '/observer/changes', {
+                    method: 'GET',
+                    headers: {
+                        'X-WP-Nonce': wpNonce
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('result-changes', {
+                        'تعداد رویدادها': data.data.length,
+                        'رویدادهای اخیر': data.data.slice(0, 10).map(e => ({
+                            نوع: e.event_type,
+                            زمان: e.created_at
+                        }))
+                    }, 'success');
+                } else {
+                    showResult('result-changes', data, 'error');
+                }
+            } catch (error) {
+                showResult('result-changes', {error: error.message}, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'اجرای تست';
+            }
+        }
+
+        // تست 6: فکت‌های اخیر
+        async function testRecentFacts() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'در حال اجرا...';
+
+            try {
+                const response = await fetch(API_BASE + '/observer/facts', {
+                    method: 'GET',
+                    headers: {
+                        'X-WP-Nonce': wpNonce
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showResult('result-facts', {
+                        'تعداد فکت‌ها': data.data.length,
+                        'فکت‌های اخیر': data.data.slice(0, 10).map(f => ({
+                            فکت: f.fact,
+                            دسته: f.category,
+                            زمان: f.created_at
+                        }))
+                    }, 'success');
+                } else {
+                    showResult('result-facts', data, 'error');
+                }
+            } catch (error) {
+                showResult('result-facts', {error: error.message}, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'اجرای تست';
+            }
+        }
+
+        // تست 7: سانیتایزیشن
+        function testSanitization() {
+            const testData = {
+                'داده‌های تست': {
+                    'api_key': 'sk_test_123456789',
+                    'password': 'mypassword123',
+                    'email': 'test@example.com',
+                    'normal_setting': 'این یک تنظیم عادی است',
+                    'woocommerce_currency': 'IRR'
+                },
+                'نتیجه انتظاری': {
+                    'api_key': '[FILTERED]',
+                    'password': '[FILTERED]',
+                    'email': '[EMAIL_FILTERED]',
+                    'normal_setting': 'این یک تنظیم عادی است',
+                    'woocommerce_currency': 'IRR'
+                },
+                'توضیحات': 'کلیدهای حساس و ایمیل‌ها باید فیلتر شوند'
+            };
+
+            showResult('result-sanitization', testData, 'info');
+        }
+
+        // تست 8: اضافه به نظارت
+        async function testAddMonitoring() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'در حال اجرا...';
+
+            try {
+                const response = await fetch(API_BASE + '/observer/monitor/add', {
+                    method: 'POST',
+                    headers: {
+                        'X-WP-Nonce': wpNonce,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        plugin_path: 'akismet/akismet.php'
+                    })
+                });
+
+                const data = await response.json();
+                showResult('result-monitoring', data, data.success ? 'success' : 'error');
+            } catch (error) {
+                showResult('result-monitoring', {error: error.message}, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'اضافه به نظارت';
+            }
+        }
+
+        // تست 8: حذف از نظارت
+        async function testRemoveMonitoring() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'در حال اجرا...';
+
+            try {
+                const response = await fetch(API_BASE + '/observer/monitor/remove', {
+                    method: 'POST',
+                    headers: {
+                        'X-WP-Nonce': wpNonce,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        plugin_path: 'akismet/akismet.php'
+                    })
+                });
+
+                const data = await response.json();
+                showResult('result-monitoring', data, data.success ? 'success' : 'error');
+            } catch (error) {
+                showResult('result-monitoring', {error: error.message}, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'حذف از نظارت';
+            }
+        }
+    </script>
+</body>
+</html>
