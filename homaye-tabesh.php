@@ -76,16 +76,40 @@ if (!class_exists('HomayeTabesh\HT_Core')) {
     return;
 }
 
-// Initialize the plugin
+// Initialize the plugin with Boot Shield protection
 add_action('plugins_loaded', function () {
     try {
-        \HomayeTabesh\HT_Core::instance();
+        // Check WooCommerce dependency (log warning if missing, but continue)
+        if (!class_exists('WooCommerce')) {
+            $log_file = WP_CONTENT_DIR . '/homa-emergency-log.txt';
+            $message = '[' . date('Y-m-d H:i:s') . '] WARNING: WooCommerce not active - some features may be limited' . PHP_EOL;
+            @file_put_contents($log_file, $message, FILE_APPEND | LOCK_EX);
+        }
+
+        // Use safe loader instead of direct instantiation
+        if (class_exists('\HomayeTabesh\HT_Loader')) {
+            $loader = \HomayeTabesh\HT_Loader::instance();
+            
+            // Only boot if not in admin or if doing AJAX
+            if (!is_admin() || wp_doing_ajax()) {
+                $loader->boot();
+            } else {
+                // In admin, always boot for settings page
+                $loader->boot();
+            }
+        } else {
+            // Fallback to direct instantiation if loader not available
+            \HomayeTabesh\HT_Core::instance();
+        }
     } catch (\Throwable $e) {
-        // Log the error - use native error_log as fallback if HT_Error_Handler not available
+        // Emergency logging that doesn't crash the site
+        $log_file = WP_CONTENT_DIR . '/homa-emergency-log.txt';
+        $message = '[' . date('Y-m-d H:i:s') . '] CRITICAL BOOT ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL;
+        @file_put_contents($log_file, $message, FILE_APPEND | LOCK_EX);
+        
+        // Also log to WordPress if available
         if (class_exists('\HomayeTabesh\HT_Error_Handler')) {
             \HomayeTabesh\HT_Error_Handler::log_exception($e, 'plugin_init');
-            
-            // Display admin notice
             \HomayeTabesh\HT_Error_Handler::admin_notice(
                 sprintf(
                     __('خطا در راه‌اندازی افزونه: %s', 'homaye-tabesh'),
@@ -93,7 +117,7 @@ add_action('plugins_loaded', function () {
                 )
             );
         } else {
-            error_log('[Homaye Tabesh - plugin_init] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+            error_log('[Homaye Tabesh - CRITICAL] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
         }
         
         // Prevent further execution but don't crash the site
