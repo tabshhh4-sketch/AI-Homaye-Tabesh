@@ -1,0 +1,292 @@
+/**
+ * Homa Smart Diplomacy - Styles
+ * 
+ * @package HomayeTabesh
+ * @since PR14
+ */
+
+/* Translation Popup Overlay */
+.homa-translation-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.homa-translation-popup-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Popup Container */
+.homa-translation-popup {
+    background: #fff;
+    border-radius: 16px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.homa-translation-popup-overlay.show .homa-translation-popup {
+    transform: scale(1);
+}
+
+/* Popup Header */
+.homa-popup-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 20px;
+    position: relative;
+    text-align: center;
+}
+
+.homa-popup-header h3 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.homa-popup-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: #fff;
+    font-size: 28px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.homa-popup-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Popup Body */
+.homa-popup-body {
+    padding: 30px;
+    text-align: center;
+}
+
+.homa-popup-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+.homa-popup-text-ar,
+.homa-popup-text-fa {
+    font-size: 16px;
+    color: #333;
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+.homa-popup-text-ar {
+    font-family: 'Noto Kufi Arabic', 'Tahoma', sans-serif;
+    direction: rtl;
+}
+
+.homa-popup-text-fa {
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+    direction: rtl;
+    color: #666;
+    font-size: 14px;
+}
+
+.homa-popup-question {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    font-family: 'Noto Kufi Arabic', 'Tahoma', sans-serif;
+    direction: rtl;
+}
+
+.homa-popup-question small {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #666;
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+}
+
+/* Popup Actions */
+.homa-popup-actions {
+    padding: 0 30px 20px;
+    display: flex;
+    gap: 12px;
+    flex-direction: column;
+}
+
+.homa-btn {
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+}
+
+.homa-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.homa-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.homa-btn-secondary {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.homa-btn-secondary:hover {
+    background: #e0e0e0;
+}
+
+/* Popup Footer */
+.homa-popup-footer {
+    background: #f9f9f9;
+    padding: 15px 30px;
+    text-align: center;
+}
+
+.homa-popup-footer small {
+    color: #999;
+    font-size: 12px;
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+}
+
+/* Translation Loading */
+.homa-translation-loading {
+    text-align: center;
+    padding: 40px;
+    color: #fff;
+}
+
+.homa-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.homa-translation-loading p {
+    font-size: 18px;
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+}
+
+/* RTL Support for Arabic Translation */
+body.homa-rtl-arabic {
+    direction: rtl;
+}
+
+body.homa-rtl-arabic * {
+    text-align: right;
+}
+
+/* Language Switcher */
+.homa-language-switcher {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
+    font-family: 'Vazir', 'Tahoma', sans-serif;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.homa-language-switcher:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.homa-language-switcher .flag-icon {
+    margin-left: 8px;
+    font-size: 18px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .homa-translation-popup {
+        width: 95%;
+        margin: 20px;
+    }
+
+    .homa-popup-body {
+        padding: 20px;
+    }
+
+    .homa-popup-actions {
+        padding: 0 20px 15px;
+    }
+
+    .homa-popup-question {
+        font-size: 16px;
+    }
+
+    .homa-btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+}
+
+/* RTL Typography Improvements */
+body.homa-rtl-arabic h1,
+body.homa-rtl-arabic h2,
+body.homa-rtl-arabic h3,
+body.homa-rtl-arabic h4,
+body.homa-rtl-arabic h5,
+body.homa-rtl-arabic h6,
+body.homa-rtl-arabic p,
+body.homa-rtl-arabic span,
+body.homa-rtl-arabic a,
+body.homa-rtl-arabic li {
+    font-family: 'Noto Kufi Arabic', 'Tahoma', sans-serif !important;
+}
+
+/* Fix common RTL layout issues */
+body.homa-rtl-arabic .et_pb_row {
+    direction: rtl;
+}
+
+body.homa-rtl-arabic .et_pb_column {
+    float: right;
+}

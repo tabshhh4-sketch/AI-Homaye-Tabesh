@@ -162,6 +162,31 @@ final class HT_Core
     public ?HT_Global_Observer_API $observer_api = null;
 
     /**
+     * GeoLocation Service (PR14 - IP-based Country Detection)
+     */
+    public ?HT_GeoLocation_Service $geo_service = null;
+
+    /**
+     * Translation Cache Manager (PR14 - Smart Translation Caching)
+     */
+    public ?HT_Translation_Cache_Manager $translation_cache = null;
+
+    /**
+     * Render Buffer Filter (PR14 - Output Translation)
+     */
+    public ?Homa_Render_Buffer_Filter $render_buffer_filter = null;
+
+    /**
+     * Diplomacy Frontend (PR14 - Translation UI)
+     */
+    public ?HT_Diplomacy_Frontend $diplomacy_frontend = null;
+
+    /**
+     * Diplomacy Test Handlers (PR14 - Validation AJAX)
+     */
+    public ?HT_Diplomacy_Test_Handlers $diplomacy_test_handlers = null;
+
+    /**
      * Get singleton instance
      *
      * @return self
@@ -235,6 +260,13 @@ final class HT_Core
         $this->global_observer = HT_Global_Observer_Core::instance();
         $this->observer_api = new HT_Global_Observer_API();
 
+        // Initialize PR14 - Smart Diplomacy (GeoLocation & Translation)
+        $this->geo_service = new HT_GeoLocation_Service();
+        $this->translation_cache = new HT_Translation_Cache_Manager();
+        $this->render_buffer_filter = new Homa_Render_Buffer_Filter();
+        $this->diplomacy_frontend = new HT_Diplomacy_Frontend();
+        $this->diplomacy_test_handlers = new HT_Diplomacy_Test_Handlers();
+
         // Initialize default knowledge base on first load
         add_action('init', [$this->knowledge, 'init_default_knowledge_base']);
         
@@ -257,6 +289,15 @@ final class HT_Core
         // Schedule metadata refresh cron job (PR12)
         HT_Metadata_Mining_Engine::schedule_metadata_refresh();
         add_action('homa_refresh_plugin_metadata', [HT_Metadata_Mining_Engine::class, 'metadata_refresh_cron']);
+
+        // Schedule translation cache cleanup (PR14)
+        if (!wp_next_scheduled('homa_cleanup_translation_cache')) {
+            wp_schedule_event(time(), 'weekly', 'homa_cleanup_translation_cache');
+        }
+        add_action('homa_cleanup_translation_cache', function() {
+            $cache_manager = new HT_Translation_Cache_Manager();
+            $cache_manager->cleanup_old_cache(90); // Clean translations older than 90 days
+        });
 
         // Schedule knowledge base auto-sync (PR13)
         if (!wp_next_scheduled('homa_auto_sync_kb')) {

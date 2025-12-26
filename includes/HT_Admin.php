@@ -102,6 +102,27 @@ class HT_Admin
             'sanitize_callback' => 'absint',
         ]);
 
+        // Smart Diplomacy settings (PR14)
+        register_setting('homaye_tabesh_settings', 'ht_translation_enabled', [
+            'type' => 'boolean',
+            'default' => true,
+        ]);
+
+        register_setting('homaye_tabesh_settings', 'ht_show_translation_popup', [
+            'type' => 'boolean',
+            'default' => true,
+        ]);
+
+        register_setting('homaye_tabesh_settings', 'ht_auto_translate_arabic_visitors', [
+            'type' => 'boolean',
+            'default' => false,
+        ]);
+
+        register_setting('homaye_tabesh_settings', 'ht_arabic_countries', [
+            'type' => 'array',
+            'default' => HT_GeoLocation_Service::get_default_arabic_countries(),
+        ]);
+
         // Add settings section
         add_settings_section(
             'ht_main_section',
