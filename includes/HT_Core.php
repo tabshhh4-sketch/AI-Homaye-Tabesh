@@ -92,6 +92,11 @@ final class HT_Core
     public ?HT_Atlas_API $atlas_api = null;
 
     /**
+     * DOM Action Controller (Visual Guidance)
+     */
+    public ?HT_DOM_Action_Controller $dom_controller = null;
+
+    /**
      * Get singleton instance
      *
      * @return self
@@ -137,6 +142,9 @@ final class HT_Core
 
         // Initialize Atlas API (autoloaded via PSR-4 from includes/HT_Atlas_API.php)
         $this->atlas_api = new HT_Atlas_API();
+
+        // Initialize DOM Action Controller (PR10 - Visual Guidance)
+        $this->dom_controller = HT_DOM_Action_Controller::instance();
 
         // Initialize default knowledge base on first load
         add_action('init', [$this->knowledge, 'init_default_knowledge_base']);
