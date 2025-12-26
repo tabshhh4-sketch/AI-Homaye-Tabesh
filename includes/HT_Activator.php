@@ -219,8 +219,7 @@ class HT_Activator
             last_used datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY  (id),
             UNIQUE KEY text_hash_lang (text_hash, lang),
-            KEY lang (lang),
-            KEY is_valid (is_valid),
+            KEY lang_valid (lang, is_valid),
             KEY use_count (use_count),
             KEY last_used (last_used)
         ) $charset_collate;";

@@ -91,7 +91,15 @@ class HT_GeoLocation_Service
             }
         }
 
-        return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        // Fallback to REMOTE_ADDR with validation
+        $remote_addr = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+        
+        // Validate the IP address
+        if (filter_var($remote_addr, FILTER_VALIDATE_IP)) {
+            return $remote_addr;
+        }
+
+        return '127.0.0.1';
     }
 
     /**

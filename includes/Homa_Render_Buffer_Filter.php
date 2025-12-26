@@ -122,7 +122,9 @@ class Homa_Render_Buffer_Filter
         
         // Add UTF-8 meta tag to ensure proper encoding
         $html = mb_convert_encoding($buffer, 'HTML-ENTITIES', 'UTF-8');
-        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        
+        // Load full HTML document properly
+        @$dom->loadHTML($html);
         
         libxml_clear_errors();
 
@@ -216,19 +218,34 @@ class Homa_Render_Buffer_Filter
      */
     private function add_rtl_attributes(string $html): string
     {
-        // Add dir="rtl" to html tag if not present
-        if (strpos($html, 'dir="rtl"') === false && strpos($html, "<html") !== false) {
-            $html = str_replace('<html', '<html dir="rtl"', $html);
+        // Use DOMDocument for safer attribute manipulation
+        $dom = new \DOMDocument('1.0', 'UTF-8');
+        libxml_use_internal_errors(true);
+        
+        @$dom->loadHTML($html);
+        libxml_clear_errors();
+
+        // Get html element and add dir attribute
+        $html_elements = $dom->getElementsByTagName('html');
+        if ($html_elements->length > 0) {
+            $html_element = $html_elements->item(0);
+            if ($html_element instanceof \DOMElement) {
+                $html_element->setAttribute('dir', 'rtl');
+            }
         }
 
-        // Add RTL class to body if not present
-        if (strpos($html, 'class="') !== false) {
-            $html = preg_replace('/<body([^>]*)class="([^"]*)"/', '<body$1class="$2 homa-rtl-arabic"', $html, 1);
-        } else {
-            $html = str_replace('<body', '<body class="homa-rtl-arabic"', $html, 1);
+        // Get body element and add class
+        $body_elements = $dom->getElementsByTagName('body');
+        if ($body_elements->length > 0) {
+            $body_element = $body_elements->item(0);
+            if ($body_element instanceof \DOMElement) {
+                $existing_class = $body_element->getAttribute('class');
+                $new_class = trim($existing_class . ' homa-rtl-arabic');
+                $body_element->setAttribute('class', $new_class);
+            }
         }
 
-        return $html;
+        return $dom->saveHTML();
     }
 
     /**

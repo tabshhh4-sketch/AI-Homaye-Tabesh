@@ -108,6 +108,11 @@ class HT_Translation_Cache_Manager
             $target_lang
         ));
 
+        // Update usage statistics if found
+        if ($result !== null) {
+            $this->update_usage_stats($text_hash, $target_lang);
+        }
+
         return $result !== null ? $result : false;
     }
 
