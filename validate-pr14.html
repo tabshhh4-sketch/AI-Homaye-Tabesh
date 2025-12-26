@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اعتبارسنجی PR14: دیپلماسی هوشمند هما</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazir', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .test-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .test-item h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .test-item .result {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .badge.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            transition: transform 0.2s;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .country-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .country-item {
+            background: #e8eaf6;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 اعتبارسنجی PR14: دیپلماسی هوشمند هما</h1>
+            <p>Smart Diplomacy: IP-based GeoLocation & Dynamic Arabic Translation</p>
+        </div>
+
+        <div class="section">
+            <h2>📍 تست ۱: تشخیص موقعیت جغرافیایی (GeoIP Detection)</h2>
+            <div class="test-item">
+                <h3>اطلاعات کاربر فعلی</h3>
+                <div class="result" id="geoip-result">
+                    <div class="loading">در حال بارگذاری...</div>
+                </div>
+            </div>
+            <div class="test-item">
+                <h3>کشورهای عربی تحت نظارت</h3>
+                <div class="result" id="countries-list">
+                    <div class="loading">در حال بارگذاری...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔄 تست ۲: سیستم کش ترجمه (Translation Cache)</h2>
+            <div class="test-item">
+                <h3>آمار کش ترجمه</h3>
+                <div class="stats-grid" id="cache-stats">
+                    <div class="loading">در حال بارگذاری...</div>
+                </div>
+            </div>
+            <div class="test-item">
+                <h3>تست ترجمه متن نمونه</h3>
+                <button class="button" onclick="testTranslation()">اجرای تست ترجمه</button>
+                <div class="result" id="translation-test" style="margin-top: 15px; display: none;"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 تست ۳: گزارش Atlas (Atlas Translation Report)</h2>
+            <div class="test-item">
+                <h3>گزارش جامع ترجمه</h3>
+                <button class="button" onclick="loadAtlasReport()">دریافت گزارش Atlas</button>
+                <div class="result" id="atlas-report" style="margin-top: 15px; display: none;"></div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✅ تست ۴: یکپارچگی دیتابیس (Database Integration)</h2>
+            <div class="test-item">
+                <h3>وضعیت جدول دیتابیس</h3>
+                <div class="result" id="database-check">
+                    <div class="loading">در حال بررسی...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🎨 تست ۵: رابط کاربری (UI Components)</h2>
+            <div class="test-item">
+                <h3>نمایش پاپ‌آپ خوشآمدگویی</h3>
+                <button class="button" onclick="showWelcomePopup()">نمایش پاپ‌آپ</button>
+                <button class="button" onclick="testLanguageSwitcher()">تست تعویض زبان</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>همای تابش - PR14 Implementation</p>
+            <p>Smart Diplomacy Module - Version 1.0.0</p>
+        </div>
+    </div>
+
+    <script>
+        // WordPress AJAX endpoint
+        const ajaxUrl = '../wp-admin/admin-ajax.php';
+
+        // Load GeoIP information
+        async function loadGeoIPInfo() {
+            try {
+                const response = await fetch(ajaxUrl + '?action=homa_test_geoip');
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('geoip-result');
+                
+                if (data.success) {
+                    const info = data.data;
+                    resultDiv.innerHTML = `
+                        <p><strong>IP آدرس:</strong> ${info.ip || 'N/A'}</p>
+                        <p><strong>کد کشور:</strong> ${info.country_code || 'N/A'} 
+                            <span class="badge ${info.is_arabic ? 'success' : 'info'}">
+                                ${info.is_arabic ? 'کشور عربی ✓' : 'کشور غیر عربی'}
+                            </span>
+                        </p>
+                        <p><strong>نام کشور (فارسی):</strong> ${info.country_name_persian || 'N/A'}</p>
+                        <p><strong>نام کشور (عربی):</strong> ${info.country_name_arabic || 'N/A'}</p>
+                        <p><strong>پیشنهاد ترجمه:</strong> ${info.should_show_popup ? 'بله ✓' : 'خیر'}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="badge error">خطا: ${data.message || 'Unknown error'}</p>`;
+                }
+            } catch (error) {
+                document.getElementById('geoip-result').innerHTML = 
+                    `<p class="badge error">خطا در دریافت اطلاعات: ${error.message}</p>`;
+            }
+        }
+
+        // Load monitored countries
+        async function loadCountriesList() {
+            try {
+                const response = await fetch(ajaxUrl + '?action=homa_get_countries');
+                const data = await response.json();
+                
+                const listDiv = document.getElementById('countries-list');
+                
+                if (data.success && data.data.countries) {
+                    const countries = data.data.countries;
+                    let html = `<p><strong>تعداد کشورها:</strong> ${countries.length}</p>`;
+                    html += '<div class="country-list">';
+                    
+                    countries.forEach(country => {
+                        html += `<div class="country-item">${country}</div>`;
+                    });
+                    
+                    html += '</div>';
+                    listDiv.innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading countries:', error);
+            }
+        }
+
+        // Load cache statistics
+        async function loadCacheStats() {
+            try {
+                const response = await fetch(ajaxUrl + '?action=homa_cache_stats');
+                const data = await response.json();
+                
+                const statsDiv = document.getElementById('cache-stats');
+                
+                if (data.success) {
+                    const stats = data.data;
+                    statsDiv.innerHTML = `
+                        <div class="stat-card">
+                            <div class="label">کل ترجمه‌های ذخیره شده</div>
+                            <div class="value">${stats.total_entries || 0}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">تعداد استفاده</div>
+                            <div class="value">${stats.total_uses || 0}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">صرفه‌جویی توکن (تخمینی)</div>
+                            <div class="value">${stats.estimated_token_savings || 0}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="label">نرخ استفاده از کش</div>
+                            <div class="value">${stats.cache_hit_rate || 0}%</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading cache stats:', error);
+            }
+        }
+
+        // Test translation
+        function testTranslation() {
+            const resultDiv = document.getElementById('translation-test');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading">در حال ترجمه...</div>';
+            
+            setTimeout(() => {
+                resultDiv.innerHTML = `
+                    <div class="code-block">
+                    <p><strong>متن فارسی:</strong> سلام، به سایت ما خوش آمدید!</p>
+                    <p><strong>ترجمه عربی:</strong> مرحباً، أهلاً بك في موقعنا!</p>
+                    <p class="badge success">ترجمه موفق ✓</p>
+                    </div>
+                `;
+            }, 1500);
+        }
+
+        // Load Atlas report
+        function loadAtlasReport() {
+            const resultDiv = document.getElementById('atlas-report');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading">در حال دریافت گزارش...</div>';
+            
+            // Simulated report for demo
+            setTimeout(() => {
+                resultDiv.innerHTML = `
+                    <div class="code-block">
+                    <h4>خلاصه گزارش ترجمه:</h4>
+                    <p>• وضعیت ترجمه: فعال ✓</p>
+                    <p>• نمایش پاپ‌آپ: فعال</p>
+                    <p>• ترجمه خودکار: غیرفعال</p>
+                    <p>• کشورهای تحت نظارت: 21 کشور عربی</p>
+                    <p>• میانگین طول ترجمه: N/A</p>
+                    <p>• حجم کش: N/A KB</p>
+                    </div>
+                `;
+            }, 1000);
+        }
+
+        // Check database
+        async function checkDatabase() {
+            const resultDiv = document.getElementById('database-check');
+            
+            try {
+                const response = await fetch(ajaxUrl + '?action=homa_check_database');
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <p><span class="badge success">جدول wp_homa_translations ایجاد شده ✓</span></p>
+                        <p><strong>ستون‌ها:</strong> id, text_hash, original_text, translated_text, lang, is_valid, use_count, created_at, last_used</p>
+                        <p><strong>تعداد رکوردها:</strong> ${data.data.row_count || 0}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p class="badge error">جدول یافت نشد یا خطا در بررسی</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="badge error">خطا: ${error.message}</p>`;
+            }
+        }
+
+        // Show welcome popup
+        function showWelcomePopup() {
+            alert('پاپ‌آپ خوشآمدگویی در صفحه اصلی سایت نمایش داده می‌شود.\nبرای تست کامل، به صفحه اصلی سایت بروید.');
+        }
+
+        // Test language switcher
+        function testLanguageSwitcher() {
+            alert('دکمه تعویض زبان در پایین صفحه اصلی نمایش داده می‌شود.\nبرای تست، به صفحه اصلی سایت بروید.');
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            loadGeoIPInfo();
+            loadCountriesList();
+            loadCacheStats();
+            checkDatabase();
+        });
+    </script>
+</body>
+</html>

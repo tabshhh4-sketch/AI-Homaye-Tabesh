@@ -182,6 +182,11 @@ final class HT_Core
     public ?HT_Diplomacy_Frontend $diplomacy_frontend = null;
 
     /**
+     * Diplomacy Test Handlers (PR14 - Validation AJAX)
+     */
+    public ?HT_Diplomacy_Test_Handlers $diplomacy_test_handlers = null;
+
+    /**
      * Get singleton instance
      *
      * @return self
@@ -260,6 +265,7 @@ final class HT_Core
         $this->translation_cache = new HT_Translation_Cache_Manager();
         $this->render_buffer_filter = new Homa_Render_Buffer_Filter();
         $this->diplomacy_frontend = new HT_Diplomacy_Frontend();
+        $this->diplomacy_test_handlers = new HT_Diplomacy_Test_Handlers();
 
         // Initialize default knowledge base on first load
         add_action('init', [$this->knowledge, 'init_default_knowledge_base']);
