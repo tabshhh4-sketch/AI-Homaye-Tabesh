@@ -38,7 +38,7 @@ class HT_Gemini_Client
 
     /**
      * Constructor
-     * 
+     *
      * Note: Constructor must not call WordPress functions as they may not be available yet.
      * API key is loaded on-demand via get_api_key() method.
      */
@@ -52,7 +52,7 @@ class HT_Gemini_Client
     
     /**
      * Get API key (lazy loading)
-     * 
+     *
      * @return string
      */
     private function get_api_key(): string

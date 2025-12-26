@@ -34,7 +34,7 @@ class HT_Prompt_Builder_Service
 
     /**
      * Constructor
-     * 
+     *
      * @param HT_Knowledge_Base $knowledge_base Knowledge base instance
      * @param HT_Persona_Manager $persona_manager Persona manager instance
      * @param HT_WooCommerce_Context $woo_context WooCommerce context instance

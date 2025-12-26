@@ -49,7 +49,7 @@ class HT_Inference_Engine
 
     /**
      * Constructor
-     * 
+     *
      * @param HT_Gemini_Client $brain Gemini client instance
      * @param HT_Knowledge_Base $knowledge Knowledge base instance
      * @param HT_Persona_Manager $memory Persona manager instance

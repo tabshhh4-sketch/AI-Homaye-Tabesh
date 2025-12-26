@@ -29,7 +29,7 @@ class HT_AI_Controller
 
     /**
      * Constructor
-     * 
+     *
      * @param HT_Inference_Engine $inference_engine Inference engine instance
      * @param HT_Prompt_Builder_Service $prompt_builder Prompt builder instance
      */
