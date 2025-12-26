@@ -48,6 +48,12 @@ if (file_exists(HT_PLUGIN_DIR . 'vendor/autoload.php')) {
 // Verify core classes are available
 if (!class_exists('HomayeTabesh\HT_Core')) {
     add_action('admin_notices', function () {
+        static $notice_shown = false;
+        if ($notice_shown) {
+            return;
+        }
+        $notice_shown = true;
+        
         echo '<div class="notice notice-error"><p>';
         echo '<strong>' . esc_html__('خطای همای تابش:', 'homaye-tabesh') . '</strong> ';
         echo esc_html__('فایلهای هسته یافت نشدند. لطفاً افزونه را مجدداً نصب کنید یا از نسخه Release استفاده کنید.', 'homaye-tabesh');
