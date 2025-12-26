@@ -209,7 +209,7 @@ class HT_Activator
 
         $sql = "CREATE TABLE IF NOT EXISTS $table_name (
             id bigint(20) NOT NULL AUTO_INCREMENT,
-            text_hash varchar(32) NOT NULL,
+            text_hash varchar(64) NOT NULL,
             original_text varchar(1000) NOT NULL,
             translated_text text NOT NULL,
             lang varchar(5) NOT NULL DEFAULT 'ar',

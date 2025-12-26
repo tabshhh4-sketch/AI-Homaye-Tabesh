@@ -172,7 +172,8 @@
             const expires = new Date();
             expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
             const secure = window.location.protocol === 'https:' ? ';Secure' : '';
-            document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/;SameSite=Lax' + secure;
+            const encodedValue = encodeURIComponent(value);
+            document.cookie = name + '=' + encodedValue + ';expires=' + expires.toUTCString() + ';path=/;SameSite=Lax' + secure;
         },
 
         deleteCookie: function(name) {
@@ -184,7 +185,8 @@
             const value = '; ' + document.cookie;
             const parts = value.split('; ' + name + '=');
             if (parts.length === 2) {
-                return parts.pop().split(';').shift();
+                const cookieValue = parts.pop().split(';').shift();
+                return decodeURIComponent(cookieValue);
             }
             return null;
         }

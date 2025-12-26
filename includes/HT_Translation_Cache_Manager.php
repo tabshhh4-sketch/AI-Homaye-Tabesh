@@ -95,7 +95,8 @@ class HT_Translation_Cache_Manager
      */
     private function generate_hash(string $text, string $target_lang): string
     {
-        return md5($text . '|' . $target_lang);
+        // Using sha256 for better collision resistance
+        return hash('sha256', $text . '|' . $target_lang);
     }
 
     /**
@@ -143,6 +144,15 @@ class HT_Translation_Cache_Manager
     ): void {
         global $wpdb;
         $table_name = $wpdb->prefix . 'homa_translations';
+
+        // Log if text will be truncated
+        if (mb_strlen($original_text) > self::MAX_ORIGINAL_TEXT_LENGTH) {
+            error_log(sprintf(
+                'Homa Translation: Text truncated from %d to %d characters',
+                mb_strlen($original_text),
+                self::MAX_ORIGINAL_TEXT_LENGTH
+            ));
+        }
 
         $wpdb->insert(
             $table_name,
