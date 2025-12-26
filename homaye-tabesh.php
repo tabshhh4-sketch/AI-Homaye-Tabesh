@@ -118,6 +118,15 @@ add_action('plugins_loaded', function () {
     }
 }, 10);
 
+// Load plugin text domain for translations
+add_action('init', function () {
+    load_plugin_textdomain(
+        'homaye-tabesh',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+}, 0); // Priority 0 to load early
+
 // Activation hook
 register_activation_hook(__FILE__, function () {
     try {
