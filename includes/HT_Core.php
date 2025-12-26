@@ -97,6 +97,11 @@ final class HT_Core
     public ?HT_DOM_Action_Controller $dom_controller = null;
 
     /**
+     * Admin Intervention (Live Messaging)
+     */
+    public ?HT_Admin_Intervention $admin_intervention = null;
+
+    /**
      * Get singleton instance
      *
      * @return self
@@ -145,6 +150,9 @@ final class HT_Core
 
         // Initialize DOM Action Controller (PR10 - Visual Guidance)
         $this->dom_controller = HT_DOM_Action_Controller::instance();
+
+        // Initialize Admin Intervention (PR10 - Live Messaging)
+        $this->admin_intervention = HT_Admin_Intervention::instance();
 
         // Initialize default knowledge base on first load
         add_action('init', [$this->knowledge, 'init_default_knowledge_base']);
@@ -209,6 +217,15 @@ final class HT_Core
             'homaye-tabesh-ui-executor',
             HT_PLUGIN_URL . 'assets/js/ui-executor.js',
             ['jquery'],
+            HT_VERSION,
+            true
+        );
+
+        // Enqueue intervention listener (PR10)
+        wp_enqueue_script(
+            'homaye-tabesh-intervention-listener',
+            HT_PLUGIN_URL . 'assets/js/homa-intervention-listener.js',
+            ['homaye-tabesh-event-bus'],
             HT_VERSION,
             true
         );
