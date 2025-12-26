@@ -78,6 +78,8 @@ if (!class_exists('HomayeTabesh\HT_Core')) {
 
 // Initialize the plugin with Boot Shield protection
 // Priority -9999 ensures early loading and proper error handler availability
+// Note: This extremely high priority is intentional and required for critical stability
+// to ensure error handlers are ready before other plugins that might trigger errors
 add_action('plugins_loaded', function () {
     // Static flag to prevent re-entry during emergency logging
     static $boot_in_progress = false;
@@ -93,7 +95,8 @@ add_action('plugins_loaded', function () {
         // Use pure PHP functions only - no WordPress globals
         if (!class_exists('WooCommerce')) {
             // Emergency logging with absolute isolation
-            $log_file = defined('WP_CONTENT_DIR') ? WP_CONTENT_DIR . '/homa-emergency-log.txt' : '/tmp/homa-emergency-log.txt';
+            // Try WP_CONTENT_DIR first, fall back to sys_get_temp_dir() which is more secure than /tmp
+            $log_file = defined('WP_CONTENT_DIR') ? WP_CONTENT_DIR . '/homa-emergency-log.txt' : sys_get_temp_dir() . '/homa-emergency-log.txt';
             $message = '[' . date('Y-m-d H:i:s') . '] WARNING: WooCommerce not active - some features may be limited' . PHP_EOL;
             @file_put_contents($log_file, $message, FILE_APPEND | LOCK_EX);
             
@@ -111,7 +114,8 @@ add_action('plugins_loaded', function () {
         }
     } catch (\Throwable $e) {
         // Emergency logging that doesn't crash the site - pure PHP only
-        $log_file = defined('WP_CONTENT_DIR') ? WP_CONTENT_DIR . '/homa-emergency-log.txt' : '/tmp/homa-emergency-log.txt';
+        // Use sys_get_temp_dir() for better cross-platform and security support
+        $log_file = defined('WP_CONTENT_DIR') ? WP_CONTENT_DIR . '/homa-emergency-log.txt' : sys_get_temp_dir() . '/homa-emergency-log.txt';
         $message = '[' . date('Y-m-d H:i:s') . '] CRITICAL BOOT ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL;
         @file_put_contents($log_file, $message, FILE_APPEND | LOCK_EX);
         

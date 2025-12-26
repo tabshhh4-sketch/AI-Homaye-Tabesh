@@ -23,6 +23,17 @@ class HT_Error_Handler
      * Circuit Breaker flag - prevents recursion during error handling
      * This is a critical safety mechanism to prevent stack overflow
      * MUST be checked as the FIRST operation in any handler method
+     * 
+     * When recursion is detected (flag is already true), the method
+     * performs a silent return to break the recursive chain. This prevents
+     * infinite loops that could crash the entire WordPress installation.
+     * 
+     * Example scenario that triggers protection:
+     * 1. log_error() is called and sets $is_processing = true
+     * 2. During logging, an error occurs that triggers error handler
+     * 3. Handler tries to call log_error() again
+     * 4. Circuit breaker detects $is_processing = true and returns immediately
+     * 5. Original log_error() completes and releases the flag
      */
     private static bool $is_processing = false;
 
