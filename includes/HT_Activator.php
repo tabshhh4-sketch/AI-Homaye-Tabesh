@@ -203,6 +203,29 @@ class HT_Activator
         ) $charset_collate;";
 
         dbDelta($sql);
+
+        // Create Translation Cache table (PR14)
+        $table_name = $wpdb->prefix . 'homa_translations';
+
+        $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+            id bigint(20) NOT NULL AUTO_INCREMENT,
+            text_hash varchar(32) NOT NULL,
+            original_text varchar(1000) NOT NULL,
+            translated_text text NOT NULL,
+            lang varchar(5) NOT NULL DEFAULT 'ar',
+            is_valid tinyint(1) DEFAULT 1,
+            use_count int(11) DEFAULT 1,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            last_used datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id),
+            UNIQUE KEY text_hash_lang (text_hash, lang),
+            KEY lang (lang),
+            KEY is_valid (is_valid),
+            KEY use_count (use_count),
+            KEY last_used (last_used)
+        ) $charset_collate;";
+
+        dbDelta($sql);
     }
 
     /**
@@ -226,6 +249,11 @@ class HT_Activator
             'ht_admin_phone_number' => '',
             'ht_lead_notification_enabled' => true,
             'ht_lead_hot_score_threshold' => 70,
+            // Smart Diplomacy settings (PR14)
+            'ht_translation_enabled' => true,
+            'ht_arabic_countries' => HT_GeoLocation_Service::get_default_arabic_countries(),
+            'ht_show_translation_popup' => true,
+            'ht_auto_translate_arabic_visitors' => false,
         ];
 
         foreach ($defaults as $key => $value) {

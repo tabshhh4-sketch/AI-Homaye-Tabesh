@@ -85,6 +85,13 @@ class HT_Atlas_API
             'callback' => [$this, 'export_csv_report'],
             'permission_callback' => [$this, 'check_admin_permission'],
         ]);
+
+        // Translation Report (PR14 - Smart Diplomacy)
+        register_rest_route('homaye/v1', '/atlas/translation-report', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_translation_report'],
+            'permission_callback' => [$this, 'check_admin_permission'],
+        ]);
     }
 
     /**
@@ -699,6 +706,96 @@ class HT_Atlas_API
             'data' => [
                 'csv_content' => $csv_content,
                 'filename' => 'atlas-report-' . date('Y-m-d') . '.csv',
+            ],
+        ], 200);
+    }
+
+    /**
+     * Get translation report (PR14 - Smart Diplomacy)
+     *
+     * @param \WP_REST_Request $request
+     * @return \WP_REST_Response
+     */
+    public function get_translation_report(\WP_REST_Request $request): \WP_REST_Response
+    {
+        global $wpdb;
+
+        // Get translation statistics
+        $translations_table = $wpdb->prefix . 'homa_translations';
+        
+        // Total translations cached
+        $total_cached = $wpdb->get_var(
+            "SELECT COUNT(*) FROM $translations_table WHERE is_valid = 1"
+        );
+
+        // Total usage count (token savings)
+        $total_uses = $wpdb->get_var(
+            "SELECT SUM(use_count) FROM $translations_table WHERE is_valid = 1"
+        );
+
+        // Estimate token savings (each translation ~50 tokens)
+        $estimated_token_savings = ((int)$total_uses - (int)$total_cached) * 50;
+
+        // Arabic translations
+        $arabic_translations = $wpdb->get_var(
+            "SELECT COUNT(*) FROM $translations_table WHERE lang = 'ar' AND is_valid = 1"
+        );
+
+        // Most used translations
+        $most_used = $wpdb->get_results(
+            "SELECT original_text, translated_text, use_count, lang 
+            FROM $translations_table 
+            WHERE is_valid = 1 
+            ORDER BY use_count DESC 
+            LIMIT 10",
+            ARRAY_A
+        );
+
+        // Recent translations (last 7 days)
+        $recent_count = $wpdb->get_var(
+            "SELECT COUNT(*) FROM $translations_table 
+            WHERE is_valid = 1 
+            AND created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)"
+        );
+
+        // Cache effectiveness
+        $cache_hit_rate = 0;
+        if ($total_uses > 0) {
+            $cache_hit_rate = (((int)$total_uses - (int)$total_cached) / (int)$total_uses) * 100;
+        }
+
+        // Get visitor statistics (estimated based on session cookies)
+        $geo_service = new HT_GeoLocation_Service();
+        $allowed_countries = $geo_service->get_allowed_arabic_countries();
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'data' => [
+                'overview' => [
+                    'total_cached_translations' => (int) $total_cached,
+                    'total_translation_uses' => (int) $total_uses,
+                    'arabic_translations' => (int) $arabic_translations,
+                    'recent_translations_7d' => (int) $recent_count,
+                    'estimated_token_savings' => (int) $estimated_token_savings,
+                    'cache_hit_rate' => round($cache_hit_rate, 2),
+                ],
+                'settings' => [
+                    'translation_enabled' => (bool) get_option('ht_translation_enabled', true),
+                    'show_popup' => (bool) get_option('ht_show_translation_popup', true),
+                    'auto_translate' => (bool) get_option('ht_auto_translate_arabic_visitors', false),
+                    'monitored_countries' => count($allowed_countries),
+                    'countries_list' => $allowed_countries,
+                ],
+                'most_used_translations' => $most_used,
+                'performance' => [
+                    'avg_translation_length' => $wpdb->get_var(
+                        "SELECT AVG(LENGTH(original_text)) FROM $translations_table WHERE is_valid = 1"
+                    ),
+                    'total_cache_size_kb' => $wpdb->get_var(
+                        "SELECT SUM(LENGTH(original_text) + LENGTH(translated_text)) / 1024 
+                        FROM $translations_table WHERE is_valid = 1"
+                    ),
+                ],
             ],
         ], 200);
     }
