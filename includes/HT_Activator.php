@@ -705,8 +705,12 @@ class HT_Activator
         try {
             global $wpdb;
             
-            // Get list of existing tables
-            $existing_tables = $wpdb->get_col("SHOW TABLES LIKE '{$wpdb->prefix}homaye_%' OR SHOW TABLES LIKE '{$wpdb->prefix}homa_%'");
+            // Get list of all existing tables and filter in PHP
+            $all_tables = $wpdb->get_col("SHOW TABLES");
+            $existing_tables = array_filter($all_tables, function($table) use ($wpdb) {
+                return strpos($table, $wpdb->prefix . 'homaye_') === 0 || 
+                       strpos($table, $wpdb->prefix . 'homa_') === 0;
+            });
             
             // Define required tables
             $required_tables = [

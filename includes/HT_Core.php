@@ -816,11 +816,15 @@ final class HT_Core
         if ($provider === 'gapgpt') {
             $base_url = get_option('ht_gapgpt_base_url', 'https://api.gapgpt.app/v1');
             $parsed_url = parse_url($base_url);
-            $domain = $parsed_url['scheme'] . '://' . $parsed_url['host'];
             
-            // Add CSP header to allow connection to GapGPT
-            // This allows wp_remote_post() to work with the API
-            header("Content-Security-Policy: connect-src 'self' $domain https://generativelanguage.googleapis.com", false);
+            // Validate parse_url result
+            if ($parsed_url && isset($parsed_url['scheme']) && isset($parsed_url['host'])) {
+                $domain = $parsed_url['scheme'] . '://' . $parsed_url['host'];
+                
+                // Add CSP header to allow connection to GapGPT
+                // This allows wp_remote_post() to work with the API
+                header("Content-Security-Policy: connect-src 'self' $domain https://generativelanguage.googleapis.com", false);
+            }
         }
     }
 

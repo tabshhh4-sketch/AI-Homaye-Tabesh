@@ -407,12 +407,6 @@ class HT_Gemini_Client
     }
 
     /**
-     * Make HTTP request to Gemini API
-     *
-     * @param array $payload Request payload
-     * @return array Response data
-     * @throws \Exception If request fails
-     */
     /**
      * Make API request to configured provider
      *
