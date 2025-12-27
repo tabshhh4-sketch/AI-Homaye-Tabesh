@@ -405,13 +405,18 @@ class HT_Knowledge_Base
      * Get facts from knowledge base
      * Returns facts as an array for use by AI or other components
      *
-     * @param string|null $category Filter by category (optional)
+     * @param string|array|null $category Filter by category (optional) - can be string, array, or null
      * @param bool $active_only Return only active facts (default: true)
      * @return array Facts array
      */
-    public function get_facts(?string $category = null, bool $active_only = true): array
+    public function get_facts(string|array|null $category = null, bool $active_only = true): array
     {
         global $wpdb;
+        
+        // Handle array input by converting to string or null
+        if (is_array($category)) {
+            $category = !empty($category) ? implode(',', $category) : null;
+        }
         
         // Check if database table exists first
         $table_name = $wpdb->prefix . 'homaye_knowledge';
@@ -585,5 +590,128 @@ class HT_Knowledge_Base
             ];
             $this->save_rules('responses', $default_responses);
         }
+    }
+
+    /**
+     * Index a single page or post content
+     * Stores the content in the indexed_pages table for search and AI context
+     *
+     * @param int $page_id Page or post ID
+     * @return bool Success status
+     */
+    public function index_content(int $page_id): bool
+    {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'homaye_indexed_pages';
+        
+        // Check if table exists
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+            return false;
+        }
+        
+        // Get page/post data
+        $post = get_post($page_id);
+        if (!$post) {
+            return false;
+        }
+        
+        // Prepare data
+        $page_title = $post->post_title;
+        $page_content = wp_strip_all_tags($post->post_content);
+        $page_url = get_permalink($page_id);
+        
+        // Insert or update indexed page
+        $result = $wpdb->replace(
+            $table_name,
+            [
+                'page_id' => $page_id,
+                'page_title' => $page_title,
+                'page_content' => $page_content,
+                'page_url' => $page_url,
+                'updated_at' => current_time('mysql'),
+            ],
+            [
+                '%d', // page_id
+                '%s', // page_title
+                '%s', // page_content
+                '%s', // page_url
+                '%s', // updated_at
+            ]
+        );
+        
+        return $result !== false;
+    }
+
+    /**
+     * Index all pages and posts in the site
+     * Useful for initial indexing or re-indexing
+     *
+     * @param array $post_types Post types to index (default: ['page', 'post'])
+     * @return int Number of pages indexed
+     */
+    public function index_all_pages(array $post_types = ['page', 'post']): int
+    {
+        $indexed_count = 0;
+        
+        foreach ($post_types as $post_type) {
+            $pages = get_posts([
+                'post_type' => $post_type,
+                'post_status' => 'publish',
+                'numberposts' => -1,
+            ]);
+            
+            foreach ($pages as $page) {
+                if ($this->index_content($page->ID)) {
+                    $indexed_count++;
+                }
+            }
+        }
+        
+        // Log success
+        if (class_exists('\HomayeTabesh\HT_Error_Handler')) {
+            \HomayeTabesh\HT_Error_Handler::log_error(
+                "Indexed {$indexed_count} pages successfully",
+                'knowledge_base_indexing'
+            );
+        }
+        
+        return $indexed_count;
+    }
+
+    /**
+     * Search indexed pages
+     * Returns pages matching the search query
+     *
+     * @param string $query Search query
+     * @param int $limit Maximum results to return
+     * @return array Matching pages
+     */
+    public function search_indexed_pages(string $query, int $limit = 10): array
+    {
+        global $wpdb;
+        
+        $table_name = $wpdb->prefix . 'homaye_indexed_pages';
+        
+        // Check if table exists
+        if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+            return [];
+        }
+        
+        $search_query = '%' . $wpdb->esc_like($query) . '%';
+        
+        $sql = $wpdb->prepare(
+            "SELECT * FROM $table_name 
+            WHERE page_title LIKE %s OR page_content LIKE %s 
+            ORDER BY updated_at DESC 
+            LIMIT %d",
+            $search_query,
+            $search_query,
+            $limit
+        );
+        
+        $results = $wpdb->get_results($sql, ARRAY_A);
+        
+        return $results ?: [];
     }
 }

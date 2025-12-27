@@ -279,6 +279,46 @@ class HT_Activator
 
             dbDelta($sql);
 
+            // Create Security Events table (for security incident tracking)
+            $table_name = $wpdb->prefix . 'homaye_security_events';
+
+            $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                user_identifier varchar(100) NOT NULL,
+                event_type varchar(50) NOT NULL,
+                event_description text DEFAULT NULL,
+                severity varchar(20) DEFAULT 'low',
+                ip_address varchar(45) DEFAULT NULL,
+                user_agent text DEFAULT NULL,
+                created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY  (id),
+                KEY user_identifier (user_identifier),
+                KEY event_type (event_type),
+                KEY severity (severity),
+                KEY created_at (created_at)
+            ) $charset_collate;";
+
+            dbDelta($sql);
+
+            // Create Indexed Pages table (for content indexing)
+            $table_name = $wpdb->prefix . 'homaye_indexed_pages';
+
+            $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                page_id bigint(20) NOT NULL,
+                page_title text NOT NULL,
+                page_content longtext DEFAULT NULL,
+                page_url varchar(255) DEFAULT NULL,
+                indexed_at datetime DEFAULT CURRENT_TIMESTAMP,
+                updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY  (id),
+                UNIQUE KEY page_id (page_id),
+                KEY indexed_at (indexed_at),
+                KEY updated_at (updated_at)
+            ) $charset_collate;";
+
+            dbDelta($sql);
+
             // Create OTP verification table (PR11)
             $table_name = $wpdb->prefix . 'homa_otp';
 
@@ -413,5 +453,65 @@ class HT_Activator
                 add_option($key, $value);
             }
         }
+    }
+
+    /**
+     * Check and repair database tables (Self-Healing)
+     * This method can be called from admin_init to ensure tables exist
+     *
+     * @return bool True if all tables exist or were created successfully
+     */
+    public static function check_and_repair_database(): bool
+    {
+        global $wpdb;
+        
+        // List of critical tables that must exist
+        $required_tables = [
+            'homaye_persona_scores',
+            'homaye_telemetry_events',
+            'homaye_conversion_sessions',
+            'homa_vault',
+            'homa_sessions',
+            'homa_user_interests',
+            'homa_leads',
+            'homaye_leads',
+            'homaye_ai_requests',
+            'homaye_knowledge',
+            'homaye_security_scores',
+            'homaye_security_events',
+            'homaye_indexed_pages',
+            'homa_otp',
+            'homa_translations',
+        ];
+        
+        $missing_tables = [];
+        
+        // Check which tables are missing
+        foreach ($required_tables as $table) {
+            $table_name = $wpdb->prefix . $table;
+            if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+                $missing_tables[] = $table;
+            }
+        }
+        
+        // If any tables are missing, recreate all tables
+        if (!empty($missing_tables)) {
+            try {
+                \HomayeTabesh\HT_Error_Handler::log_error(
+                    'Self-healing: Missing tables detected: ' . implode(', ', $missing_tables),
+                    'database_repair'
+                );
+                
+                // Call create_tables to rebuild all tables
+                self::create_tables();
+                
+                return true;
+            } catch (\Throwable $e) {
+                \HomayeTabesh\HT_Error_Handler::log_exception($e, 'database_self_healing');
+                return false;
+            }
+        }
+        
+        return true;
     }
 }
