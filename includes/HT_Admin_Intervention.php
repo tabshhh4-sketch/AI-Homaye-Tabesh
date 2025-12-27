@@ -384,9 +384,9 @@ class HT_Admin_Intervention
             return false;
         }
 
-        // Validate user has admin capabilities
+        // Validate user exists and has admin capabilities
         $user = get_userdata($admin_id);
-        if (!$user || !$user->has_cap('manage_options')) {
+        if ($user === false || !$user || !$user->has_cap('manage_options')) {
             return false;
         }
 
@@ -400,8 +400,8 @@ class HT_Admin_Intervention
 
         $alert = wp_parse_args($alert_data, $defaults);
 
-        // Create a special session for admin notifications
-        $session_id = 'admin_alert_' . $admin_id . '_' . time();
+        // Create a special session for admin notifications with entropy
+        $session_id = 'admin_alert_' . $admin_id . '_' . time() . '_' . wp_generate_password(8, false);
 
         // Insert alert as an intervention message
         $result = $wpdb->insert(

@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client';
 import HomaSidebar from './components/HomaSidebar';
 import './styles/parallel-ui.css';
 
+// Configuration constant for initialization timing
+const ORCHESTRATOR_INIT_DELAY = 100; // milliseconds
+
 /**
  * Initialize Homa Parallel UI
  * This function is called by WordPress when the page loads
@@ -40,7 +43,7 @@ window.initHomaParallelUI = function() {
             // Try again after creating fallback
             const fallbackContainer = document.getElementById('homa-sidebar-view');
             if (!fallbackContainer) {
-                console.error('[Homa] Failed to create fallback sidebar container');
+                console.error('[Homa] Failed to create fallback sidebar container. Please refresh the page or check browser console for JavaScript errors.');
                 return;
             }
         } else {
@@ -75,7 +78,7 @@ if (document.readyState === 'loading') {
             if (window.initHomaParallelUI) {
                 window.initHomaParallelUI();
             }
-        }, 100);
+        }, ORCHESTRATOR_INIT_DELAY);
     });
 } else {
     // Document already loaded, wait a bit for orchestrator
@@ -83,5 +86,5 @@ if (document.readyState === 'loading') {
         if (window.initHomaParallelUI) {
             window.initHomaParallelUI();
         }
-    }, 100);
+    }, ORCHESTRATOR_INIT_DELAY);
 }
