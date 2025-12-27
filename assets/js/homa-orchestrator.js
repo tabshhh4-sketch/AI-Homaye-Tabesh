@@ -387,16 +387,19 @@
         }
     };
 
-    // Auto-initialize when DOM is ready (after React setup)
+    // Auto-initialize when DOM is ready - MUST run before React sidebar
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            // Wait a bit for other scripts to load
-            setTimeout(() => {
-                if (!window.HomaOrchestrator.initialized) {
-                    window.HomaOrchestrator.init();
-                }
-            }, 100);
+            // Initialize immediately - React sidebar depends on this
+            if (!window.HomaOrchestrator.initialized) {
+                window.HomaOrchestrator.init();
+            }
         });
+    } else {
+        // Document already loaded, initialize now
+        if (!window.HomaOrchestrator.initialized) {
+            window.HomaOrchestrator.init();
+        }
     }
 
 })();
