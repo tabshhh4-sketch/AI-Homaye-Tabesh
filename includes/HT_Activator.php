@@ -655,8 +655,9 @@ class HT_Activator
             foreach ($table_columns as $table => $columns) {
                 $table_name = $wpdb->prefix . $table;
                 
-                // Check if table exists
-                if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+                // Check if table exists - use prepare for consistency
+                $check_table = $wpdb->prepare("SHOW TABLES LIKE %s", $table_name);
+                if ($wpdb->get_var($check_table) != $table_name) {
                     continue; // Skip if table doesn't exist
                 }
                 
@@ -671,6 +672,9 @@ class HT_Activator
                     
                     if (empty($column_exists)) {
                         // Add missing column
+                        // Note: ALTER TABLE cannot use prepare() as it doesn't support
+                        // placeholders for table/column names. Table name is from internal
+                        // config only, not user input.
                         $wpdb->query("ALTER TABLE `{$table_name}` ADD COLUMN `{$column}` {$definition}");
                         
                         $added_columns[] = "{$table}.{$column}";
