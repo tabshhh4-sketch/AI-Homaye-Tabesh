@@ -44,7 +44,7 @@ class HT_Activator
      *
      * @return void
      */
-    private static function create_tables(): void
+    public static function create_tables(): void
     {
         try {
             global $wpdb;
@@ -691,5 +691,56 @@ class HT_Activator
         }
         
         return $added_columns;
+    }
+
+    /**
+     * Ensure all required tables exist
+     * This method checks table existence using SHOW TABLES and creates them if missing
+     * Called during settings load to ensure database integrity
+     *
+     * @return void
+     */
+    public static function ensure_tables_exist(): void
+    {
+        try {
+            global $wpdb;
+            
+            // Get list of plugin tables using two separate queries for efficiency
+            $homaye_tables = $wpdb->get_col($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($wpdb->prefix . 'homaye_') . '%'));
+            $homa_tables = $wpdb->get_col($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($wpdb->prefix . 'homa_') . '%'));
+            $existing_tables = array_merge($homaye_tables, $homa_tables);
+            
+            // Define required tables
+            $required_tables = [
+                $wpdb->prefix . 'homaye_persona_scores',
+                $wpdb->prefix . 'homaye_telemetry_events',
+                $wpdb->prefix . 'homaye_conversion_sessions',
+                $wpdb->prefix . 'homa_vault',
+                $wpdb->prefix . 'homa_sessions',
+                $wpdb->prefix . 'homa_user_interests',
+                $wpdb->prefix . 'homa_leads',
+                $wpdb->prefix . 'homaye_leads',
+                $wpdb->prefix . 'homaye_ai_requests',
+                $wpdb->prefix . 'homaye_knowledge',
+                $wpdb->prefix . 'homaye_security_scores',
+                $wpdb->prefix . 'homaye_security_events',
+            ];
+            
+            // Check which tables are missing
+            $missing_tables = array_diff($required_tables, $existing_tables);
+            
+            if (!empty($missing_tables)) {
+                // Tables are missing, recreate them
+                \HomayeTabesh\HT_Error_Handler::log_error(
+                    'Missing database tables detected: ' . implode(', ', $missing_tables) . '. Recreating...',
+                    'database_integrity'
+                );
+                
+                // Call create_tables to recreate missing tables
+                self::create_tables();
+            }
+        } catch (\Throwable $e) {
+            \HomayeTabesh\HT_Error_Handler::log_exception($e, 'ensure_tables_exist');
+        }
     }
 }
