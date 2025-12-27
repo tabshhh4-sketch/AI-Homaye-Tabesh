@@ -119,12 +119,19 @@
         },
 
         /**
-         * Create fallback sidebar container if main setup fails
+          * Create fallback sidebar container if main setup fails
          */
         createFallbackSidebar: function() {
             try {
                 // Check if sidebar already exists
                 if (document.getElementById('homa-sidebar-view')) {
+                    console.log('[Homa Orchestrator] Sidebar container already exists');
+                    return;
+                }
+
+                // Verify body element exists
+                if (!document.body) {
+                    console.error('[Homa Orchestrator] Cannot create fallback sidebar - document.body not available');
                     return;
                 }
 
@@ -143,10 +150,11 @@
                     z-index: ${SIDEBAR_Z_INDEX};
                     transition: right ${SIDEBAR_TRANSITION_DURATION} ease;
                     box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+                    overflow: auto;
                 `;
                 
                 document.body.appendChild(sidebar);
-                console.log('[Homa Orchestrator] Fallback sidebar created');
+                console.log('[Homa Orchestrator] Fallback sidebar created successfully');
             } catch (fallbackError) {
                 console.error('[Homa Orchestrator] Even fallback sidebar creation failed:', fallbackError);
             }
