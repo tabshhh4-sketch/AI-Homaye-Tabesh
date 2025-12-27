@@ -837,6 +837,12 @@ class HT_Atlas_API
             $response = $gemini->generate_response($test_prompt);
             $duration = round((microtime(true) - $start_time) * 1000); // milliseconds
             
+            // Ensure response has 'success' key
+            if (!isset($response['success'])) {
+                $response['success'] = false;
+                $response['error'] = 'Invalid response structure from API';
+            }
+            
             if ($response['success']) {
                 return new \WP_REST_Response([
                     'success' => true,

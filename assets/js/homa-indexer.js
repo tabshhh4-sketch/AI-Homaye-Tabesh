@@ -91,18 +91,26 @@
             
             // Expose to window for debugging (in namespaced debug object)
             // Using getter to prevent external modification
-            if (!window.HomaDebug) window.HomaDebug = {};
-            Object.defineProperty(window.HomaDebug, 'IndexerMap', {
-                get: () => {
-                    // Return a read-only representation
-                    const readOnlyMap = new Map();
-                    this.map.forEach((value, key) => {
-                        readOnlyMap.set(key, {...value});
-                    });
-                    return readOnlyMap;
-                },
-                enumerable: true
-            });
+            // Only define once to prevent "Cannot redefine property" errors
+            if (!window.HomaDebug) {
+                window.HomaDebug = {};
+            }
+            
+            // Check if property already exists before defining
+            if (!Object.prototype.hasOwnProperty.call(window.HomaDebug, 'IndexerMap')) {
+                Object.defineProperty(window.HomaDebug, 'IndexerMap', {
+                    get: () => {
+                        // Return a read-only representation
+                        const readOnlyMap = new Map();
+                        this.map.forEach((value, key) => {
+                            readOnlyMap.set(key, {...value});
+                        });
+                        return readOnlyMap;
+                    },
+                    enumerable: true,
+                    configurable: true // Allow reconfiguration if needed
+                });
+            }
 
             // Emit indexer ready event
             if (window.Homa && window.Homa.emit) {

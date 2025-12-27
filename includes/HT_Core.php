@@ -642,6 +642,37 @@ final class HT_Core
                         if ($repaired !== false) {
                             update_option('homa_db_last_check', time());
                         }
+                        
+                        // Show admin notice if repairs were made
+                        $db_repairs = get_transient('homa_db_repairs_made');
+                        if ($db_repairs && is_array($db_repairs)) {
+                            HT_Error_Handler::admin_notice(
+                                sprintf(
+                                    __('سیستم خودترمیمی فعال شد. %d جدول و %d ستون بازیابی شد.', 'homaye-tabesh'),
+                                    count($db_repairs['tables'] ?? []),
+                                    count($db_repairs['columns'] ?? [])
+                                ),
+                                'success'
+                            );
+                            delete_transient('homa_db_repairs_made');
+                        }
+                    }
+                }
+                
+                // Check if API key is configured (show notice once per user)
+                $user_id = get_current_user_id();
+                if ($user_id && !get_user_meta($user_id, 'homa_api_key_notice_dismissed', true)) {
+                    $api_key = get_option('ht_gemini_api_key', '');
+                    if (empty($api_key)) {
+                        HT_Error_Handler::admin_notice(
+                            __('کلید API همای تابش تنظیم نشده است. لطفاً به تنظیمات بروید و کلید API را وارد کنید.', 'homaye-tabesh'),
+                            'warning'
+                        );
+                        // Mark as shown for this user for 7 days
+                        update_user_meta($user_id, 'homa_api_key_notice_dismissed', time() + (7 * DAY_IN_SECONDS));
+                    } else {
+                        // API key is configured, clear the notice flag
+                        delete_user_meta($user_id, 'homa_api_key_notice_dismissed');
                     }
                 }
             }, 5); // Early priority
