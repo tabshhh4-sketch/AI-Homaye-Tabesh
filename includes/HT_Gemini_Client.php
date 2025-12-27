@@ -522,6 +522,11 @@ class HT_Gemini_Client
             throw new \Exception('Failed to parse API response');
         }
 
+        // Validate response structure
+        if (empty($data['choices']) || !is_array($data['choices']) || !isset($data['choices'][0]['message']['content'])) {
+            throw new \Exception('Invalid response structure from GapGPT API');
+        }
+
         // Convert OpenAI response format to Gemini-compatible format
         $converted = [
             'candidates' => [
@@ -529,7 +534,7 @@ class HT_Gemini_Client
                     'content' => [
                         'parts' => [
                             [
-                                'text' => $data['choices'][0]['message']['content'] ?? ''
+                                'text' => $data['choices'][0]['message']['content']
                             ]
                         ]
                     ]

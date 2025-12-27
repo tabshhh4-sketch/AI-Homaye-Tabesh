@@ -705,12 +705,10 @@ class HT_Activator
         try {
             global $wpdb;
             
-            // Get list of all existing tables and filter in PHP
-            $all_tables = $wpdb->get_col("SHOW TABLES");
-            $existing_tables = array_filter($all_tables, function($table) use ($wpdb) {
-                return strpos($table, $wpdb->prefix . 'homaye_') === 0 || 
-                       strpos($table, $wpdb->prefix . 'homa_') === 0;
-            });
+            // Get list of plugin tables using two separate queries for efficiency
+            $homaye_tables = $wpdb->get_col($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($wpdb->prefix . 'homaye_') . '%'));
+            $homa_tables = $wpdb->get_col($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($wpdb->prefix . 'homa_') . '%'));
+            $existing_tables = array_merge($homaye_tables, $homa_tables);
             
             // Define required tables
             $required_tables = [
