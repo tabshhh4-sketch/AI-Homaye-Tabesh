@@ -5,6 +5,11 @@
 (function() {
     'use strict';
 
+    // Configuration constants
+    const SIDEBAR_WIDTH = 400; // pixels
+    const SIDEBAR_Z_INDEX = 999999;
+    const SIDEBAR_TRANSITION_DURATION = '0.3s';
+
     window.HomaOrchestrator = {
         initialized: false,
         isOpen: false,
@@ -131,12 +136,12 @@
                 sidebar.style.cssText = `
                     position: fixed;
                     top: 0;
-                    right: -400px;
-                    width: 400px;
+                    right: -${SIDEBAR_WIDTH}px;
+                    width: ${SIDEBAR_WIDTH}px;
                     height: 100vh;
                     background: white;
-                    z-index: 999999;
-                    transition: right 0.3s ease;
+                    z-index: ${SIDEBAR_Z_INDEX};
+                    transition: right ${SIDEBAR_TRANSITION_DURATION} ease;
                     box-shadow: -2px 0 10px rgba(0,0,0,0.1);
                 `;
                 

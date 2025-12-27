@@ -54,8 +54,8 @@ class HT_Health_Check_API
                 'methods' => 'POST',
                 'callback' => [$this, 'report_error'],
                 'permission_callback' => function () {
-                    // Allow logged-in users or admin bar users to report errors
-                    return is_user_logged_in() || current_user_can('manage_options');
+                    // Allow all logged-in users to report errors for better diagnostics
+                    return is_user_logged_in();
                 },
             ]);
 
@@ -88,9 +88,10 @@ class HT_Health_Check_API
             $tables_ok = true;
             foreach ($critical_tables as $table) {
                 $table_name = $wpdb->prefix . $table;
-                // Use prepare for consistency even though table name is from trusted source
-                $query = $wpdb->prepare("SHOW TABLES LIKE %s", $table_name);
-                if ($wpdb->get_var($query) != $table_name) {
+                // Table name is from trusted source (wpdb->prefix + hardcoded table name)
+                // SHOW TABLES doesn't support prepared statement placeholders for table names
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name)) != $table_name) {
                     $tables_ok = false;
                     break;
                 }

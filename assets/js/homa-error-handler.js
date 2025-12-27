@@ -171,7 +171,11 @@
 
                 // Send to WordPress REST API if available
                 if (window.homaConfig?.restUrl) {
-                    fetch(window.homaConfig.restUrl + 'homaye/v1/error-report', {
+                    // Construct URL properly - ensure proper path separator
+                    const restUrl = window.homaConfig.restUrl.replace(/\/$/, ''); // Remove trailing slash
+                    const reportUrl = `${restUrl}/homaye/v1/error-report`;
+                    
+                    fetch(reportUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

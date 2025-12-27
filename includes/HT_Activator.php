@@ -584,9 +584,9 @@ class HT_Activator
         // Check which tables are missing
         foreach ($required_tables as $table) {
             $table_name = $wpdb->prefix . $table;
-            // Use prepare for consistency and security best practice
-            $query = $wpdb->prepare("SHOW TABLES LIKE %s", $table_name);
-            if ($wpdb->get_var($query) != $table_name) {
+            // Table name is from trusted source (wpdb->prefix + hardcoded table name)
+            // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+            if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name)) != $table_name) {
                 $missing_tables[] = $table;
             }
         }
@@ -852,9 +852,9 @@ class HT_Activator
             $missing_tables = [];
             foreach ($required_tables as $table) {
                 $table_name = $wpdb->prefix . $table;
-                // Use prepare for consistency and security best practice
-                $query = $wpdb->prepare("SHOW TABLES LIKE %s", $table_name);
-                if ($wpdb->get_var($query) != $table_name) {
+                // Table name is from trusted source (wpdb->prefix + hardcoded table name)
+                // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+                if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table_name)) != $table_name) {
                     $missing_tables[] = $table;
                 }
             }
