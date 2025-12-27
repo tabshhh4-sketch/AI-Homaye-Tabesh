@@ -307,13 +307,13 @@ class HT_Data_Exporter
     {
         $result = $this->export_knowledge($description, false);
         
-        if ($result['success']) {
+        if (isset($result['success']) && $result['success']) {
             global $wpdb;
             // Mark as auto snapshot
             $wpdb->update(
                 $this->snapshots_table,
                 ['is_auto' => 1],
-                ['id' => $result['snapshot_id']],
+                ['id' => $result['snapshot_id'] ?? 0],
                 ['%d'],
                 ['%d']
             );

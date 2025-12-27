@@ -108,7 +108,7 @@ class HT_PostPurchase_REST_API
             ], 400);
         }
 
-        return new \WP_REST_Response($result, $result['success'] ? 200 : 400);
+        return new \WP_REST_Response($result, (isset($result['success']) && $result['success']) ? 200 : 400);
     }
 
     /**
@@ -132,7 +132,7 @@ class HT_PostPurchase_REST_API
         $bridge = new HT_Shipping_API_Bridge();
         $result = $bridge->get_tracking_status($tracking_code, $service);
 
-        return new \WP_REST_Response($result, $result['success'] ? 200 : 400);
+        return new \WP_REST_Response($result, (isset($result['success']) && $result['success']) ? 200 : 400);
     }
 
     /**
@@ -161,7 +161,7 @@ class HT_PostPurchase_REST_API
             'context' => $context,
         ]);
 
-        return new \WP_REST_Response($result, $result['success'] ? 200 : 400);
+        return new \WP_REST_Response($result, (isset($result['success']) && $result['success']) ? 200 : 400);
     }
 
     /**

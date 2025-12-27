@@ -67,7 +67,7 @@ class HT_Shipping_API_Bridge
         };
 
         // کش کردن نتیجه برای 15 دقیقه
-        if ($result['success']) {
+        if (isset($result['success']) && $result['success']) {
             set_transient($cache_key, $result, 15 * MINUTE_IN_SECONDS);
         }
 
