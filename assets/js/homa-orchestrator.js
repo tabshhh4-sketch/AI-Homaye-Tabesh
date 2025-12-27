@@ -98,12 +98,7 @@
                 window.Homa.updateState({ isSidebarOpen: true });
             }
 
-            // Dispatch event for React
-            document.dispatchEvent(new CustomEvent('homa:toggle-sidebar', {
-                detail: { isOpen: true }
-            }));
-
-            // Emit via event bus
+            // Emit via event bus (but don't dispatch DOM event to avoid recursion)
             if (window.Homa && window.Homa.emit) {
                 window.Homa.emit('sidebar:opened', { timestamp: Date.now() });
             }
@@ -131,12 +126,7 @@
                 window.Homa.updateState({ isSidebarOpen: false });
             }
 
-            // Dispatch event for React
-            document.dispatchEvent(new CustomEvent('homa:toggle-sidebar', {
-                detail: { isOpen: false }
-            }));
-
-            // Emit via event bus
+            // Emit via event bus (but don't dispatch DOM event to avoid recursion)
             if (window.Homa && window.Homa.emit) {
                 window.Homa.emit('sidebar:closed', { timestamp: Date.now() });
             }
@@ -176,8 +166,12 @@
                     }
                 });
 
-                // Trigger Isotope recalculation for galleries
-                window.jQuery('.et_pb_gallery').isotope('layout');
+                // Trigger Isotope recalculation for galleries - with safety check
+                if (typeof window.jQuery.fn.isotope === 'function') {
+                    window.jQuery('.et_pb_gallery').isotope('layout');
+                } else {
+                    console.warn('[Homa Orchestrator] Isotope library not loaded, skipping gallery recalculation');
+                }
             }
         },
 

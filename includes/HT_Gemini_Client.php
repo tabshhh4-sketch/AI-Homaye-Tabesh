@@ -384,6 +384,21 @@ class HT_Gemini_Client
         }
 
         $status_code = wp_remote_retrieve_response_code($response);
+        
+        // Handle 429 Quota Exceeded gracefully
+        if ($status_code === 429) {
+            // Log the quota exceeded error
+            if (class_exists('\HomayeTabesh\HT_Error_Handler')) {
+                \HomayeTabesh\HT_Error_Handler::log_error(
+                    'Gemini API Quota Exceeded (429). Switching to fallback mode.',
+                    'api_quota'
+                );
+            }
+            
+            // Return a structured error response instead of throwing exception
+            throw new \Exception('quota_exceeded:سهمیه روزانه API Gemini تمام شده است. لطفاً بعداً تلاش کنید.');
+        }
+        
         if ($status_code !== 200) {
             $body = wp_remote_retrieve_body($response);
             throw new \Exception("API request failed with status $status_code: $body");
@@ -440,6 +455,18 @@ class HT_Gemini_Client
      */
     private function get_fallback_response(string $error): array
     {
+        // Check if this is a quota exceeded error
+        if (str_starts_with($error, 'quota_exceeded:')) {
+            $message = substr($error, strlen('quota_exceeded:'));
+            return [
+                'success' => false,
+                'error' => 'quota_exceeded',
+                'data' => [
+                    'message' => $message,
+                ],
+            ];
+        }
+        
         return [
             'success' => false,
             'error' => $error,

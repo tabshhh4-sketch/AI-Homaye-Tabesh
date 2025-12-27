@@ -628,6 +628,25 @@ final class HT_Core
      */
     private function register_hooks(): void
     {
+        // Database self-healing check (admin_init hook)
+        $this->safe_call(function() {
+            add_action('admin_init', function() {
+                // Only check once per day to avoid performance impact
+                $last_check = get_option('homa_db_last_check', 0);
+                $check_interval = 24 * HOUR_IN_SECONDS; // 24 hours
+                
+                if ((time() - $last_check) > $check_interval) {
+                    if (class_exists('\HomayeTabesh\HT_Activator')) {
+                        $repaired = \HomayeTabesh\HT_Activator::check_and_repair_database();
+                        // Only update timestamp if check was performed (whether repairs were needed or not)
+                        if ($repaired !== false) {
+                            update_option('homa_db_last_check', time());
+                        }
+                    }
+                }
+            }, 5); // Early priority
+        }, 'database_self_healing');
+
         // Wrap hook registrations to prevent cascade failures
         $this->safe_call(function() {
             // اتصال به REST API وردپرس
