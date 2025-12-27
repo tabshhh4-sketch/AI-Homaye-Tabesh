@@ -584,7 +584,9 @@ class HT_Activator
         // Check which tables are missing
         foreach ($required_tables as $table) {
             $table_name = $wpdb->prefix . $table;
-            if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+            // Use prepare for consistency and security best practice
+            $query = $wpdb->prepare("SHOW TABLES LIKE %s", $table_name);
+            if ($wpdb->get_var($query) != $table_name) {
                 $missing_tables[] = $table;
             }
         }
@@ -850,7 +852,9 @@ class HT_Activator
             $missing_tables = [];
             foreach ($required_tables as $table) {
                 $table_name = $wpdb->prefix . $table;
-                if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+                // Use prepare for consistency and security best practice
+                $query = $wpdb->prepare("SHOW TABLES LIKE %s", $table_name);
+                if ($wpdb->get_var($query) != $table_name) {
                     $missing_tables[] = $table;
                 }
             }

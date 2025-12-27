@@ -61,6 +61,21 @@
 }
 ```
 
+### Error Reporting
+- **Endpoint:** `POST /wp-json/homaye/v1/error-report`
+- **دسترسی:** کاربران احراز هویت شده
+- **توضیحات:** گزارش خطاهای JavaScript از فرانت‌اند
+- **پارامترها:**
+  - `error` (object, required): اطلاعات خطا
+  - `context` (object, optional): اطلاعات زمینه‌ای
+- **پاسخ نمونه:**
+```json
+{
+  "success": true,
+  "message": "Error reported successfully"
+}
+```
+
 ## 💬 AI & Chat
 
 ### Chat with AI

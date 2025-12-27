@@ -49,6 +49,16 @@ class HT_Health_Check_API
                 },
             ]);
 
+            // Error reporting endpoint - for frontend error tracking
+            register_rest_route('homaye/v1', '/error-report', [
+                'methods' => 'POST',
+                'callback' => [$this, 'report_error'],
+                'permission_callback' => function () {
+                    // Allow logged-in users or admin bar users to report errors
+                    return is_user_logged_in() || current_user_can('manage_options');
+                },
+            ]);
+
         } catch (\Throwable $e) {
             HT_Error_Handler::log_exception($e, 'health_api_registration');
         }
@@ -78,7 +88,9 @@ class HT_Health_Check_API
             $tables_ok = true;
             foreach ($critical_tables as $table) {
                 $table_name = $wpdb->prefix . $table;
-                if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+                // Use prepare for consistency even though table name is from trusted source
+                $query = $wpdb->prepare("SHOW TABLES LIKE %s", $table_name);
+                if ($wpdb->get_var($query) != $table_name) {
                     $tables_ok = false;
                     break;
                 }
@@ -222,6 +234,68 @@ class HT_Health_Check_API
                 'status' => 'error',
                 'message' => 'Endpoint check failed',
                 'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Report frontend error
+     * Stores JavaScript errors for admin review
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response object
+     */
+    public function report_error(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try {
+            $error = $request->get_param('error');
+            $context = $request->get_param('context');
+
+            if (empty($error)) {
+                return new \WP_REST_Response([
+                    'success' => false,
+                    'message' => 'Error data is required',
+                ], 400);
+            }
+
+            // Log to WordPress error log
+            $error_message = sprintf(
+                '[Homa Frontend Error] %s | URL: %s | User: %s',
+                $error['message'] ?? 'Unknown error',
+                $context['url'] ?? 'unknown',
+                get_current_user_id() ?: 'guest'
+            );
+
+            HT_Error_Handler::log_error($error_message, 'frontend_error');
+
+            // Store in transient for admin dashboard (keep last 50 errors)
+            $frontend_errors = get_transient('homa_frontend_errors') ?: [];
+            
+            $frontend_errors[] = [
+                'error' => $error,
+                'context' => $context,
+                'user_id' => get_current_user_id(),
+                'timestamp' => current_time('mysql'),
+            ];
+
+            // Keep only last 50 errors
+            if (count($frontend_errors) > 50) {
+                $frontend_errors = array_slice($frontend_errors, -50);
+            }
+
+            set_transient('homa_frontend_errors', $frontend_errors, WEEK_IN_SECONDS);
+
+            return new \WP_REST_Response([
+                'success' => true,
+                'message' => 'Error reported successfully',
+            ], 200);
+
+        } catch (\Throwable $e) {
+            HT_Error_Handler::log_exception($e, 'error_reporting');
+            
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Failed to report error',
             ], 500);
         }
     }
