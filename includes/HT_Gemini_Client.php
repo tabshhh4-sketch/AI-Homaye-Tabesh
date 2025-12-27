@@ -236,6 +236,12 @@ class HT_Gemini_Client
     {
         $result = $this->generate_content($prompt, $context);
         
+        // Ensure result always has 'success' key
+        if (!isset($result['success'])) {
+            $result['success'] = false;
+            $result['error'] = 'Invalid response structure';
+        }
+        
         // Ensure response has 'response' key for backward compatibility
         if ($result['success'] && !isset($result['response'])) {
             if (isset($result['raw_text'])) {

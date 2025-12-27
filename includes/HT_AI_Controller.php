@@ -153,8 +153,11 @@ class HT_AI_Controller
         $chat_capabilities = HT_Core::instance()->chat_capabilities;
         $result = $chat_capabilities->filter_ai_response($result, $user_role_context);
 
+        // Ensure result has 'success' key
+        $success = isset($result['success']) && $result['success'];
+        
         // Return response
-        return new \WP_REST_Response($result, $result['success'] ? 200 : 500);
+        return new \WP_REST_Response($result, $success ? 200 : 500);
     }
 
     /**
@@ -169,7 +172,10 @@ class HT_AI_Controller
 
         $result = $this->inference_engine->get_context_suggestion($user_id, []);
 
-        return new \WP_REST_Response($result, $result['success'] ? 200 : 404);
+        // Ensure result has 'success' key
+        $success = isset($result['success']) && $result['success'];
+
+        return new \WP_REST_Response($result, $success ? 200 : 404);
     }
 
     /**

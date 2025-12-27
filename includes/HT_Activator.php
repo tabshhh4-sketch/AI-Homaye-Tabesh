@@ -370,13 +370,80 @@ class HT_Activator
                 plugin_name varchar(255) NOT NULL,
                 plugin_version varchar(50) DEFAULT NULL,
                 is_active tinyint(1) DEFAULT 1,
+                is_monitored tinyint(1) DEFAULT 0,
                 metadata json DEFAULT NULL,
                 last_scanned datetime DEFAULT CURRENT_TIMESTAMP,
                 created_at datetime DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY  (id),
                 UNIQUE KEY plugin_slug (plugin_slug),
                 KEY is_active (is_active),
+                KEY is_monitored (is_monitored),
                 KEY last_scanned (last_scanned)
+            ) $charset_collate;";
+
+            dbDelta($sql);
+
+            // Create Knowledge Facts table (for console analytics)
+            $table_name = $wpdb->prefix . 'homaye_knowledge_facts';
+
+            $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                fact_key varchar(100) NOT NULL,
+                fact_value text NOT NULL,
+                fact_category varchar(50) DEFAULT 'general',
+                authority_level int(11) DEFAULT 0,
+                source varchar(100) DEFAULT 'system',
+                is_active tinyint(1) DEFAULT 1,
+                verified tinyint(1) DEFAULT 0,
+                created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY  (id),
+                UNIQUE KEY fact_key (fact_key),
+                KEY fact_category (fact_category),
+                KEY is_active (is_active),
+                KEY verified (verified),
+                KEY authority_level (authority_level)
+            ) $charset_collate;";
+
+            dbDelta($sql);
+
+            // Create IP Blacklist table (for WAF engine)
+            $table_name = $wpdb->prefix . 'homaye_blacklist';
+
+            $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                ip_address varchar(45) NOT NULL,
+                reason varchar(255) DEFAULT NULL,
+                threat_type varchar(50) DEFAULT NULL,
+                blocked_at datetime DEFAULT CURRENT_TIMESTAMP,
+                expires_at datetime DEFAULT NULL,
+                PRIMARY KEY  (id),
+                UNIQUE KEY ip_address (ip_address),
+                KEY blocked_at (blocked_at),
+                KEY expires_at (expires_at)
+            ) $charset_collate;";
+
+            dbDelta($sql);
+
+            // Create User Behavior Tracking table (with current_score column)
+            $table_name = $wpdb->prefix . 'homaye_user_behavior';
+
+            $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+                id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_identifier varchar(255) NOT NULL,
+                ip_address varchar(45) NOT NULL,
+                fingerprint varchar(64) DEFAULT NULL,
+                event_type varchar(50) NOT NULL,
+                event_data text,
+                penalty_points int(11) DEFAULT 0,
+                current_score int(11) DEFAULT 100,
+                created_at datetime NOT NULL,
+                PRIMARY KEY  (id),
+                KEY user_identifier (user_identifier),
+                KEY ip_address (ip_address),
+                KEY event_type (event_type),
+                KEY current_score (current_score),
+                KEY created_at (created_at)
             ) $charset_collate;";
 
             dbDelta($sql);
@@ -497,10 +564,13 @@ class HT_Activator
             'homaye_leads',
             'homaye_ai_requests',
             'homaye_knowledge',
+            'homaye_knowledge_facts',
             'homaye_security_scores',
             'homaye_security_events',
             'homaye_indexed_pages',
             'homaye_monitored_plugins',
+            'homaye_blacklist',
+            'homaye_user_behavior',
             'homa_otp',
             'homa_translations',
         ];
@@ -533,6 +603,69 @@ class HT_Activator
             }
         }
         
+        // Also check for missing columns in existing tables
+        self::check_and_add_missing_columns();
+        
         return true;
+    }
+
+    /**
+     * Check and add missing columns to existing tables
+     * This handles schema updates without dropping tables
+     *
+     * @return void
+     */
+    private static function check_and_add_missing_columns(): void
+    {
+        global $wpdb;
+        
+        try {
+            // Define expected columns for each table
+            $table_columns = [
+                'homaye_monitored_plugins' => [
+                    'is_monitored' => 'tinyint(1) DEFAULT 0',
+                ],
+                'homaye_knowledge_facts' => [
+                    'verified' => 'tinyint(1) DEFAULT 0',
+                ],
+                'homaye_security_scores' => [
+                    'current_score' => 'int(11) DEFAULT 100',
+                ],
+                'homa_otp' => [
+                    'is_verified' => 'tinyint(1) DEFAULT 0',
+                ],
+            ];
+            
+            foreach ($table_columns as $table => $columns) {
+                $table_name = $wpdb->prefix . $table;
+                
+                // Check if table exists
+                if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+                    continue; // Skip if table doesn't exist
+                }
+                
+                foreach ($columns as $column => $definition) {
+                    // Check if column exists
+                    $column_exists = $wpdb->get_results(
+                        $wpdb->prepare(
+                            "SHOW COLUMNS FROM `{$table_name}` LIKE %s",
+                            $column
+                        )
+                    );
+                    
+                    if (empty($column_exists)) {
+                        // Add missing column
+                        $wpdb->query("ALTER TABLE `{$table_name}` ADD COLUMN `{$column}` {$definition}");
+                        
+                        \HomayeTabesh\HT_Error_Handler::log_error(
+                            "Self-healing: Added missing column '{$column}' to table '{$table}'",
+                            'database_repair'
+                        );
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \HomayeTabesh\HT_Error_Handler::log_exception($e, 'database_column_repair');
+        }
     }
 }
