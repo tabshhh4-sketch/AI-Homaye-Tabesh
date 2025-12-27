@@ -193,6 +193,8 @@ class HT_Activator
             dbDelta($sql);
 
             // Create Legacy Leads table (for backward compatibility)
+            // Note: This maintains compatibility with older versions that used homaye_leads
+            // The new table homa_leads (created above) is the primary table going forward
             $table_name = $wpdb->prefix . 'homaye_leads';
 
             $sql = "CREATE TABLE IF NOT EXISTS $table_name (

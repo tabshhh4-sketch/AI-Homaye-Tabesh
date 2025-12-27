@@ -199,7 +199,11 @@ class HT_Atlas_API
                     'active_users_7d' => (int)$active_users,
                     'total_events' => (int)$total_events,
                 ],
-                'insights' => $this->generate_health_insights($conversion_rate, (int)$active_users, $health_score),
+                'insights' => $this->generate_health_insights(
+                    $conversion_rate, 
+                    (int)($active_users ?? 0), // Cast to int to ensure type safety
+                    $health_score
+                ),
                 'timestamp' => current_time('mysql'),
             ]
         ], 200);
