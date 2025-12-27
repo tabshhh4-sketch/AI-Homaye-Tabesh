@@ -664,6 +664,17 @@ final class HT_Core
                     }
                 }
                 
+                // Display activation health report if available
+                $health_report = get_transient('homa_activation_health_report');
+                if ($health_report && is_array($health_report)) {
+                    add_action('admin_notices', function() use ($health_report) {
+                        if (class_exists('\HomayeTabesh\HT_Activator')) {
+                            \HomayeTabesh\HT_Activator::display_health_report($health_report);
+                        }
+                    });
+                    delete_transient('homa_activation_health_report');
+                }
+                
                 // Check if API key is configured (show notice once per user)
                 $user_id = get_current_user_id();
                 if ($user_id && !get_user_meta($user_id, 'homa_api_key_notice_dismissed', true)) {
