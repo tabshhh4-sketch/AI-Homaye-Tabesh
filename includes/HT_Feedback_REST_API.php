@@ -97,7 +97,7 @@ class HT_Feedback_REST_API
 
         $result = $this->feedback_system->submit_feedback($feedback_data);
 
-        return new \WP_REST_Response($result, $result['success'] ? 200 : 400);
+        return new \WP_REST_Response($result, (isset($result['success']) && $result['success']) ? 200 : 400);
     }
 
     /**

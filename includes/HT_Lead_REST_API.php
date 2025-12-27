@@ -153,7 +153,7 @@ class HT_Lead_REST_API
 
         $result = $this->otp_engine->send_otp($phone_number, $session_token);
 
-        return new \WP_REST_Response($result, $result['success'] ? 200 : 400);
+        return new \WP_REST_Response($result, (isset($result['success']) && $result['success']) ? 200 : 400);
     }
 
     /**
@@ -168,7 +168,7 @@ class HT_Lead_REST_API
         // تایید کد
         $verify_result = $this->otp_engine->verify_otp($phone_number, $otp_code);
 
-        if (!$verify_result['success']) {
+        if (!isset($verify_result['success']) || !$verify_result['success']) {
             return new \WP_REST_Response($verify_result, 400);
         }
 

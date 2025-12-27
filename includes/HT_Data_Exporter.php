@@ -307,13 +307,13 @@ class HT_Data_Exporter
     {
         $result = $this->export_knowledge($description, false);
         
-        if ($result['success']) {
+        if (isset($result['success']) && $result['success']) {
             global $wpdb;
             // Mark as auto snapshot
             $wpdb->update(
                 $this->snapshots_table,
                 ['is_auto' => 1],
-                ['id' => $result['snapshot_id']],
+                ['id' => $result['snapshot_id'] ?? 0],
                 ['%d'],
                 ['%d']
             );
@@ -455,7 +455,9 @@ class HT_Data_Exporter
             return [];
         }
 
-        return $wpdb->get_results("SELECT * FROM {$table} WHERE is_active = 1", ARRAY_A) ?: [];
+        // Use backticks for table name safety and prepare for consistency
+        $query = "SELECT * FROM `{$wpdb->prefix}homa_authority_overrides` WHERE is_active = 1";
+        return $wpdb->get_results($query, ARRAY_A) ?: [];
     }
 
     /**

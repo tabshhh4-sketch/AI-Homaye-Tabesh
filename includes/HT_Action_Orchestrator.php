@@ -99,14 +99,16 @@ class HT_Action_Orchestrator
             // Execute action
             $result = $this->execute_single_action($action);
             
-            // Log execution
-            $this->log_execution($action, $result['success'], $result['message'] ?? '');
+            // Log execution (with isset checks)
+            $success = isset($result['success']) ? $result['success'] : false;
+            $message = $result['message'] ?? '';
+            $this->log_execution($action, $success, $message);
 
             // Store result
             $results[] = $result;
 
             // Check if action failed
-            if (!$result['success']) {
+            if (!$success) {
                 $all_success = false;
                 
                 // Perform rollback
@@ -207,7 +209,7 @@ class HT_Action_Orchestrator
             $otp_engine = new Homa_OTP_Core_Engine();
             $verification = $otp_engine->verify_otp($params['phone'], $params['code']);
             
-            if ($verification['success']) {
+            if (isset($verification['success']) && $verification['success']) {
                 return [
                     'success' => true,
                     'message' => 'شماره تلفن شما با موفقیت تایید شد',
@@ -363,7 +365,7 @@ class HT_Action_Orchestrator
             $result = $sms_provider->send_sms($phone, $message);
         }
 
-        if ($result['success']) {
+        if (isset($result['success']) && $result['success']) {
             return [
                 'success' => true,
                 'message' => 'پیامک با موفقیت ارسال شد',

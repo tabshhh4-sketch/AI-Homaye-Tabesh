@@ -376,7 +376,7 @@ class HT_Dynamic_Context_Generator
         if (!empty($phone)) {
             $orders_result = $tracker->get_orders_by_phone($phone);
             
-            if ($orders_result['success'] && !empty($orders_result['orders'])) {
+            if (isset($orders_result['success']) && $orders_result['success'] && !empty($orders_result['orders'])) {
                 $context .= "سفارشات فعال:\n";
                 foreach ($orders_result['orders'] as $order) {
                     $context .= "  - سفارش #{$order['order_id']}: {$order['status_label']} ";
