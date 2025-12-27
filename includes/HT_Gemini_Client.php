@@ -157,7 +157,7 @@ class HT_Gemini_Client
                     
                     $filter_result = $shield->filter_output($response_text, $user_identifier);
                     
-                    // Always use the filtered response if available
+                    // Use the filtered response (which may be sanitized or blocked)
                     if (isset($filter_result['response'])) {
                         $parsed_response['response'] = $filter_result['response'];
                     }
@@ -409,15 +409,15 @@ class HT_Gemini_Client
         }
         
         if ($status_code === 401) {
-            throw new \Exception('quota_exceeded:کلید API نامعتبر است. لطفاً تنظیمات را بررسی کنید.');
+            throw new \Exception('auth_failed:کلید API نامعتبر است. لطفاً تنظیمات را بررسی کنید.');
         }
         
         if ($status_code === 403) {
-            throw new \Exception('quota_exceeded:دسترسی به API Gemini مسدود شده است. لطفاً تنظیمات API را بررسی کنید.');
+            throw new \Exception('access_denied:دسترسی به API Gemini مسدود شده است. لطفاً تنظیمات API را بررسی کنید.');
         }
         
         if ($status_code === 503) {
-            throw new \Exception('quota_exceeded:سرویس Gemini موقتاً در دسترس نیست. لطفاً دقایقی دیگر تلاش کنید.');
+            throw new \Exception('service_unavailable:سرویس Gemini موقتاً در دسترس نیست. لطفاً دقایقی دیگر تلاش کنید.');
         }
         
         if ($status_code !== 200) {
@@ -489,16 +489,25 @@ class HT_Gemini_Client
      */
     private function get_fallback_response(string $error): array
     {
-        // Check if this is a quota exceeded error
-        if (str_starts_with($error, 'quota_exceeded:')) {
-            $message = substr($error, strlen('quota_exceeded:'));
-            return [
-                'success' => false,
-                'error' => 'quota_exceeded',
-                'data' => [
-                    'message' => $message,
-                ],
-            ];
+        // Parse error with prefix pattern (error_type:message)
+        $error_types = [
+            'quota_exceeded' => 'quota_exceeded',
+            'auth_failed' => 'auth_failed',
+            'access_denied' => 'access_denied',
+            'service_unavailable' => 'service_unavailable',
+        ];
+        
+        foreach ($error_types as $prefix => $error_code) {
+            if (str_starts_with($error, $prefix . ':')) {
+                $message = substr($error, strlen($prefix) + 1);
+                return [
+                    'success' => false,
+                    'error' => $error_code,
+                    'data' => [
+                        'message' => $message,
+                    ],
+                ];
+            }
         }
         
         return [
