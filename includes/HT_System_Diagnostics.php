@@ -41,6 +41,10 @@ class HT_System_Diagnostics
     /**
      * Test AI API connection (GapGPT or direct Gemini)
      *
+     * Currently supports GapGPT as the unified API gateway.
+     * GapGPT provides access to multiple AI models (Gemini, GPT, Claude, etc.)
+     * through a single API endpoint.
+     *
      * @return array Connection status
      */
     private function test_ai_connection(): array
@@ -49,6 +53,9 @@ class HT_System_Diagnostics
         
         try {
             $ai_provider = get_option('ht_ai_provider', 'gapgpt');
+            
+            // Currently only GapGPT is supported as the API gateway
+            // Future: Add support for direct API connections to other providers
             $api_key = get_option('ht_gapgpt_api_key', '');
             $base_url = get_option('ht_gapgpt_base_url', 'https://api.gapgpt.app/v1');
             $model = get_option('ht_ai_model', 'gemini-2.5-flash');
@@ -136,10 +143,15 @@ class HT_System_Diagnostics
      * Test Gemini API connection (deprecated - kept for compatibility)
      *
      * @return array Connection status
-     * @deprecated Use test_ai_connection() instead
+     * @deprecated 1.0.0 Use test_ai_connection() instead
      */
     private function test_gemini_connection(): array
     {
+        // Log deprecation notice if WP_DEBUG is enabled
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('HT_System_Diagnostics::test_gemini_connection() is deprecated. Use test_ai_connection() instead.');
+        }
+        
         return $this->test_ai_connection();
     }
 
