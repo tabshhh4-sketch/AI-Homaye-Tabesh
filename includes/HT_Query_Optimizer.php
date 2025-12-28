@@ -330,19 +330,16 @@ class HT_Query_Optimizer
         global $wpdb;
 
         $indexes = [
-            // Knowledge base indexes
-            $wpdb->prefix . 'homa_knowledge' => [
-                ['name' => 'idx_fact_key', 'column' => 'fact_key'],
-                ['name' => 'idx_category', 'column' => 'category'],
-                ['name' => 'idx_active', 'column' => 'is_active'],
-                ['name' => 'idx_access_count', 'column' => 'access_count'],
-            ],
-            // Authority overrides indexes
+            // Note: The homaye_knowledge table (wp_homaye_knowledge with prefix) already has 
+            // all necessary indexes defined in its CREATE TABLE statement in HT_Activator.php
+            // No need to add them again here to avoid "column doesn't exist" errors
+            
+            // Authority overrides indexes (only if table exists)
             $wpdb->prefix . 'homa_authority_overrides' => [
                 ['name' => 'idx_override_key', 'column' => 'override_key'],
                 ['name' => 'idx_active', 'column' => 'is_active'],
             ],
-            // Feedback indexes
+            // Feedback indexes (only if table exists)
             $wpdb->prefix . 'homa_feedback' => [
                 ['name' => 'idx_user_id', 'column' => 'user_id'],
                 ['name' => 'idx_rating', 'column' => 'rating'],
