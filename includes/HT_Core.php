@@ -857,8 +857,8 @@ final class HT_Core
      */
     public function modify_csp_headers(): void
     {
-        // Only modify if GapGPT provider is selected
-        $provider = get_option('ht_ai_provider', 'gemini_direct');
+        // Always use GapGPT provider
+        $provider = get_option('ht_ai_provider', 'gapgpt');
         if ($provider === 'gapgpt') {
             $base_url = get_option('ht_gapgpt_base_url', 'https://api.gapgpt.app/v1');
             $parsed_url = parse_url($base_url);
@@ -877,7 +877,7 @@ final class HT_Core
                 if (in_array($domain, $allowed_domains, true)) {
                     // Add CSP header to allow connection to GapGPT
                     // This allows wp_remote_post() to work with the API
-                    header("Content-Security-Policy: connect-src 'self' " . $domain . " https://generativelanguage.googleapis.com", false);
+                    header("Content-Security-Policy: connect-src 'self' " . $domain, false);
                 }
             }
         }
