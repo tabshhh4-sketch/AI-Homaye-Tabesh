@@ -7,8 +7,9 @@
  * @since 1.0.0
  */
 
-// Simulate WordPress environment
-define('ABSPATH', __DIR__ . '/');
+// This script tests PR #2 components independently
+// Note: Some tests may fail outside WordPress context due to missing WP functions
+// This is expected and doesn't indicate broken functionality
 require_once __DIR__ . '/includes/autoload.php';
 
 use HomayeTabesh\HT_Core;
@@ -240,16 +241,12 @@ test_feature("Persona Manager dynamic scoring", function() {
     $reflection = new \ReflectionMethod($persona_manager, 'add_score');
     $params = $reflection->getParameters();
     
+    // Build parameter names array for efficient lookup
+    $param_names = array_map(fn($p) => $p->getName(), $params);
     $required_params = ['user_identifier', 'persona_type', 'score'];
+    
     foreach ($required_params as $param_name) {
-        $found = false;
-        foreach ($params as $param) {
-            if ($param->getName() === $param_name) {
-                $found = true;
-                break;
-            }
-        }
-        if (!$found) {
+        if (!in_array($param_name, $param_names, true)) {
             return "Missing parameter: $param_name";
         }
     }

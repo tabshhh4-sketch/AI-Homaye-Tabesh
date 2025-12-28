@@ -223,7 +223,15 @@ Time window: 5 minutes ✓
 
         // Log function
         function log(message, type = 'info') {
-            const timestamp = new Date().toLocaleTimeString('fa-IR');
+            // Use Persian locale with fallback
+            let timestamp;
+            try {
+                timestamp = new Date().toLocaleTimeString('fa-IR');
+            } catch (e) {
+                // Fallback to default locale if fa-IR not supported
+                timestamp = new Date().toLocaleTimeString();
+            }
+            
             const color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6';
             const entry = `<div class="event-log" style="border-right-color: ${color}">
                 <strong>[${timestamp}]</strong> ${message}
@@ -232,9 +240,9 @@ Time window: 5 minutes ✓
             const logDiv = document.getElementById('event-log');
             logDiv.innerHTML = entry + logDiv.innerHTML;
             
-            // Keep only last 20 events
+            // Keep only last 20 events - remove all excess at once
             const events = logDiv.getElementsByClassName('event-log');
-            if (events.length > 20) {
+            while (events.length > 20) {
                 events[events.length - 1].remove();
             }
         }
@@ -295,6 +303,17 @@ Time window: 5 minutes ✓
         // Send Test Event
         async function sendTestEvent() {
             try {
+                // Check for nonce availability
+                const nonce = window.homayeConfig?.nonce;
+                if (!nonce) {
+                    log('⚠ Warning: No nonce available. Event may fail authentication.', 'error');
+                    displayResult('Warning', {
+                        message: 'This demo requires WordPress context with valid nonce',
+                        note: 'Access this page from your WordPress installation'
+                    });
+                    return;
+                }
+                
                 const testEvent = {
                     event_type: 'module_dwell',
                     element_class: 'et_pb_pricing_table test-demo',
@@ -309,7 +328,7 @@ Time window: 5 minutes ✓
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-WP-Nonce': window.homayeConfig?.nonce || ''
+                        'X-WP-Nonce': nonce
                     },
                     body: JSON.stringify(testEvent)
                 });
