@@ -34,6 +34,12 @@
     const eventListeners = new Map();
 
     /**
+     * Track registered listeners to prevent duplicates
+     * Maps event names to Sets of callback functions
+     */
+    const registeredListeners = new Map();
+
+    /**
      * Event history for debugging
      */
     const eventHistory = [];
@@ -96,6 +102,19 @@
             return () => {};
         }
 
+        // Check if this exact callback is already registered to prevent duplicates
+        if (!registeredListeners.has(eventName)) {
+            registeredListeners.set(eventName, new Set());
+        }
+        
+        if (registeredListeners.get(eventName).has(callback)) {
+            console.warn(`[Homa Event Bus] Listener already registered for: ${eventName}, skipping duplicate`);
+            return () => {}; // Return no-op cleanup function
+        }
+        
+        // Mark as registered
+        registeredListeners.get(eventName).add(callback);
+
         // Register in our listeners map
         if (!eventListeners.has(eventName)) {
             eventListeners.set(eventName, []);
@@ -105,6 +124,9 @@
         // Also register as native event listener for CustomEvent
         const fullEventName = `homa:${eventName}`;
         const wrappedCallback = (e) => callback(e.detail);
+        
+        // Store wrapped callback reference for cleanup
+        callback._homaWrappedCallback = wrappedCallback;
         window.addEventListener(fullEventName, wrappedCallback);
 
         console.log(`[Homa Event Bus] Registered listener for: ${eventName}`);
@@ -112,7 +134,6 @@
         // Return cleanup function
         return () => {
             window.Homa.off(eventName, callback);
-            window.removeEventListener(fullEventName, wrappedCallback);
         };
     };
 
@@ -130,6 +151,18 @@
                 listeners.splice(index, 1);
                 console.log(`[Homa Event Bus] Removed listener for: ${eventName}`);
             }
+        }
+        
+        // Remove from registered set
+        if (registeredListeners.has(eventName)) {
+            registeredListeners.get(eventName).delete(callback);
+        }
+        
+        // Remove native event listener using stored wrapped callback
+        if (callback._homaWrappedCallback) {
+            const fullEventName = `homa:${eventName}`;
+            window.removeEventListener(fullEventName, callback._homaWrappedCallback);
+            delete callback._homaWrappedCallback;
         }
     };
 
