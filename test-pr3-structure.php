@@ -117,10 +117,24 @@ if ($all_js_exist) {
 }
 
 /**
+ * Cache file contents for performance
+ */
+$cached_files = [
+    'core' => file_get_contents(__DIR__ . '/includes/HT_Core.php'),
+    'inference' => file_get_contents(__DIR__ . '/includes/HT_Inference_Engine.php'),
+    'controller' => file_get_contents(__DIR__ . '/includes/HT_AI_Controller.php'),
+    'gemini' => file_get_contents(__DIR__ . '/includes/HT_Gemini_Client.php'),
+    'parser' => file_get_contents(__DIR__ . '/includes/HT_Action_Parser.php'),
+    'prompt' => file_get_contents(__DIR__ . '/includes/HT_Prompt_Builder_Service.php'),
+    'ui' => file_get_contents(__DIR__ . '/assets/js/ui-executor.js'),
+    'kb' => file_get_contents(__DIR__ . '/includes/HT_Knowledge_Base.php'),
+];
+
+/**
  * Test 4: Check HT_Core initializes inference_engine
  */
 echo "Test 4: HT_Core initializes inference_engine ... ";
-$core_content = file_get_contents(__DIR__ . '/includes/HT_Core.php');
+$core_content = $cached_files['core'];
 
 if (strpos($core_content, 'public ?HT_Inference_Engine $inference_engine') !== false &&
     strpos($core_content, 'new HT_Inference_Engine') !== false) {
@@ -163,7 +177,7 @@ if (strpos($core_content, 'homaye-tabesh-ui-executor') !== false &&
  * Test 7: Check Inference Engine calls generate_decision
  */
 echo "Test 7: Inference Engine has generate_decision ... ";
-$inference_content = file_get_contents(__DIR__ . '/includes/HT_Inference_Engine.php');
+$inference_content = $cached_files['inference'];
 
 if (strpos($inference_content, 'public function generate_decision') !== false &&
     strpos($inference_content, 'prompt_builder->build_system_instruction') !== false &&
@@ -179,7 +193,7 @@ if (strpos($inference_content, 'public function generate_decision') !== false &&
  * Test 8: Check AI Controller handles requests
  */
 echo "Test 8: AI Controller has request handlers ... ";
-$controller_content = file_get_contents(__DIR__ . '/includes/HT_AI_Controller.php');
+$controller_content = $cached_files['controller'];
 
 $required_endpoints = [
     '/ai/query',
@@ -213,7 +227,7 @@ if ($all_endpoints &&
  * Test 9: Check Gemini Client has get_json_response
  */
 echo "Test 9: Gemini Client has get_json_response ... ";
-$gemini_content = file_get_contents(__DIR__ . '/includes/HT_Gemini_Client.php');
+$gemini_content = $cached_files['gemini'];
 
 if (strpos($gemini_content, 'public function get_json_response') !== false &&
     strpos($gemini_content, 'temperature') !== false &&
@@ -229,7 +243,7 @@ if (strpos($gemini_content, 'public function get_json_response') !== false &&
  * Test 10: Check Action Parser handles 9 action types
  */
 echo "Test 10: Action Parser supports 9 action types ... ";
-$parser_content = file_get_contents(__DIR__ . '/includes/HT_Action_Parser.php');
+$parser_content = $cached_files['parser'];
 
 $required_actions = [
     'highlight_element',
@@ -265,7 +279,7 @@ if ($all_actions) {
  * Test 11: Check Prompt Builder has sanitize_input
  */
 echo "Test 11: Prompt Builder sanitizes input ... ";
-$prompt_content = file_get_contents(__DIR__ . '/includes/HT_Prompt_Builder_Service.php');
+$prompt_content = $cached_files['prompt'];
 
 if (strpos($prompt_content, 'public function sanitize_input') !== false ||
     strpos($prompt_content, 'function sanitize_input') !== false) {
@@ -294,7 +308,7 @@ if (strpos($prompt_content, 'public function build_system_instruction') !== fals
  * Test 13: Check UI Executor class exists
  */
 echo "Test 13: UI Executor has HomaUIExecutor class ... ";
-$ui_content = file_get_contents(__DIR__ . '/assets/js/ui-executor.js');
+$ui_content = $cached_files['ui'];
 
 if (strpos($ui_content, 'class HomaUIExecutor') !== false &&
     strpos($ui_content, 'executeAction') !== false &&
@@ -310,7 +324,7 @@ if (strpos($ui_content, 'class HomaUIExecutor') !== false &&
  * Test 14: Check Knowledge Base has required methods
  */
 echo "Test 14: Knowledge Base has load_rules method ... ";
-$kb_content = file_get_contents(__DIR__ . '/includes/HT_Knowledge_Base.php');
+$kb_content = $cached_files['kb'];
 
 if (strpos($kb_content, 'function load_rules') !== false) {
     echo color_text("✓ PASSED\n", 'green');
