@@ -241,7 +241,7 @@ class HT_Parallel_UI
                 'persona' => $persona,
                 'page_context' => $context,
                 'woocommerce_data' => $this->core->woo_context->get_product_context(),
-                'user_behavior' => $this->get_user_behavior($user_id)
+                'user_behavior' => $this->get_user_behavior((string)$user_id)
             ];
 
             // Get AI response
