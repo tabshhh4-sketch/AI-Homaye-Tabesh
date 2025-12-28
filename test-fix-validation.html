@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تست رفع خطاهای رابط کاربری هما</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        .test-button:hover {
+            transform: scale(1.05);
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 تست رفع خطاهای رابط کاربری هما</h1>
+        
+        <div class="test-section">
+            <h2>✅ لیست تست‌ها</h2>
+            <div id="test-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎯 دکمه‌های تست</h2>
+            <button class="test-button" onclick="testOrchestrator()">تست Orchestrator</button>
+            <button class="test-button" onclick="testSidebarContainer()">تست Container</button>
+            <button class="test-button" onclick="testEventBus()">تست Event Bus</button>
+            <button class="test-button" onclick="testFAB()">تست FAB</button>
+            <button class="test-button" onclick="runAllTests()">اجرای همه تست‌ها</button>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 نتایج</h2>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Simulated test environment
+        const results = {
+            tests: [],
+            passed: 0,
+            failed: 0
+        };
+
+        function logTest(name, passed, message) {
+            results.tests.push({ name, passed, message });
+            if (passed) {
+                results.passed++;
+            } else {
+                results.failed++;
+            }
+            updateTestResults();
+        }
+
+        function updateTestResults() {
+            const resultsDiv = document.getElementById('results');
+            const testResultsDiv = document.getElementById('test-results');
+            
+            resultsDiv.innerHTML = `
+                <div class="status ${results.failed === 0 ? 'success' : 'error'}">
+                    <strong>نتیجه کلی:</strong> ${results.passed} موفق، ${results.failed} ناموفق
+                </div>
+            `;
+
+            testResultsDiv.innerHTML = results.tests.map(test => `
+                <div class="status ${test.passed ? 'success' : 'error'}">
+                    ${test.passed ? '✅' : '❌'} <strong>${test.name}:</strong> ${test.message}
+                </div>
+            `).join('');
+        }
+
+        function testOrchestrator() {
+            logTest('Orchestrator Existence', 
+                typeof window.HomaOrchestrator !== 'undefined',
+                'window.HomaOrchestrator ' + (typeof window.HomaOrchestrator !== 'undefined' ? 'موجود است' : 'موجود نیست'));
+
+            if (typeof window.HomaOrchestrator !== 'undefined') {
+                logTest('Orchestrator Initialized', 
+                    window.HomaOrchestrator.initialized === true,
+                    'Orchestrator ' + (window.HomaOrchestrator.initialized ? 'مقداردهی شده' : 'مقداردهی نشده'));
+                
+                logTest('Orchestrator has isOpen', 
+                    typeof window.HomaOrchestrator.isOpen !== 'undefined',
+                    'isOpen property ' + (typeof window.HomaOrchestrator.isOpen !== 'undefined' ? 'موجود است' : 'موجود نیست'));
+            }
+        }
+
+        function testSidebarContainer() {
+            const container = document.getElementById('homa-sidebar-view');
+            logTest('Sidebar Container', 
+                container !== null,
+                'homa-sidebar-view ' + (container ? 'موجود است' : 'موجود نیست'));
+
+            if (container) {
+                logTest('Container in DOM', 
+                    document.body.contains(container),
+                    'Container در DOM ' + (document.body.contains(container) ? 'است' : 'نیست'));
+            }
+        }
+
+        function testEventBus() {
+            logTest('Homa Object', 
+                typeof window.Homa !== 'undefined',
+                'window.Homa ' + (typeof window.Homa !== 'undefined' ? 'موجود است' : 'موجود نیست'));
+
+            if (typeof window.Homa !== 'undefined') {
+                logTest('Homa.emit Function', 
+                    typeof window.Homa.emit === 'function',
+                    'Homa.emit ' + (typeof window.Homa.emit === 'function' ? 'تابع است' : 'تابع نیست'));
+
+                logTest('Homa.on Function', 
+                    typeof window.Homa.on === 'function',
+                    'Homa.on ' + (typeof window.Homa.on === 'function' ? 'تابع است' : 'تابع نیست'));
+            }
+        }
+
+        function testFAB() {
+            const fab = document.getElementById('homa-fab');
+            logTest('FAB Element', 
+                fab !== null,
+                'FAB ' + (fab ? 'موجود است' : 'موجود نیست'));
+
+            if (fab) {
+                logTest('FAB Clickable', 
+                    fab.onclick !== null || fab.addEventListener,
+                    'FAB ' + (fab.onclick !== null || fab.addEventListener ? 'قابل کلیک است' : 'قابل کلیک نیست'));
+            }
+        }
+
+        function runAllTests() {
+            results.tests = [];
+            results.passed = 0;
+            results.failed = 0;
+
+            logTest('Test Start', true, 'شروع تست‌ها...');
+            
+            testOrchestrator();
+            testSidebarContainer();
+            testEventBus();
+            testFAB();
+
+            logTest('Test Complete', results.failed === 0, 
+                `تست‌ها کامل شد: ${results.passed} موفق، ${results.failed} ناموفق`);
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
