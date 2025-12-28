@@ -25,13 +25,6 @@ const HomaSidebar = () => {
     const homaEmit = useHomaEmit();
 
     useEffect(() => {
-        // Listen for sidebar toggle events
-        const handleToggle = (event) => {
-            setIsOpen(event.detail.isOpen);
-        };
-
-        document.addEventListener('homa:toggle-sidebar', handleToggle);
-
         // Load chat history from localStorage
         loadChatHistory();
         
@@ -42,11 +35,16 @@ const HomaSidebar = () => {
         if (window.Homa && window.Homa.emit) {
             window.Homa.emit('react:ready', { timestamp: Date.now() });
         }
-
-        return () => {
-            document.removeEventListener('homa:toggle-sidebar', handleToggle);
-        };
     }, []);
+
+    // Listen for sidebar state changes via Homa Event Bus
+    useHomaEvent('sidebar:opened', () => {
+        setIsOpen(true);
+    });
+
+    useHomaEvent('sidebar:closed', () => {
+        setIsOpen(false);
+    });
 
     // Listen for site input changes via event bus
     useSiteInputChanges((data) => {
@@ -327,9 +325,15 @@ const HomaSidebar = () => {
                 <button 
                     className="homa-close-btn"
                     onClick={() => {
-                        document.body.classList.remove('homa-open');
-                        setIsOpen(false);
-                        homaEmit('sidebar:close_requested', {});
+                        // Use orchestrator to close sidebar properly
+                        if (window.HomaOrchestrator) {
+                            window.HomaOrchestrator.closeSidebar();
+                        } else {
+                            // Fallback
+                            document.body.classList.remove('homa-open');
+                            setIsOpen(false);
+                            homaEmit('sidebar:close_requested', {});
+                        }
                     }}
                     aria-label="بستن"
                 >
