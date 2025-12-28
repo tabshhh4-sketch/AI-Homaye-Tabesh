@@ -412,4 +412,177 @@ class HT_Vault_Manager
 
         return implode("\n", $summary);
     }
+
+    /**
+     * Store a chat message in persistent memory
+     *
+     * @param string $message_type Type: 'user' or 'assistant'
+     * @param string $message_content The message content
+     * @param array $ai_metadata Optional metadata (actions, commands, etc.)
+     * @return bool Success status
+     */
+    public static function store_chat_message(string $message_type, string $message_content, array $ai_metadata = []): bool
+    {
+        global $wpdb;
+
+        $session_id = self::get_session_token();
+        $user_identifier = is_user_logged_in() ? 'user_' . get_current_user_id() : $session_id;
+        $user_role = self::get_user_role();
+        $table_name = $wpdb->prefix . 'homaye_chat_memory';
+
+        $result = $wpdb->insert(
+            $table_name,
+            [
+                'session_id' => $session_id,
+                'user_identifier' => $user_identifier,
+                'user_role' => $user_role,
+                'message_type' => $message_type,
+                'message_content' => $message_content,
+                'ai_metadata' => !empty($ai_metadata) ? wp_json_encode($ai_metadata) : null,
+                'created_at' => current_time('mysql')
+            ],
+            ['%s', '%s', '%s', '%s', '%s', '%s', '%s']
+        );
+
+        return $result !== false;
+    }
+
+    /**
+     * Retrieve chat messages for current session
+     *
+     * @param int $limit Maximum number of messages to retrieve (0 = all)
+     * @param string|null $session_id Optional specific session ID
+     * @return array Array of chat messages
+     */
+    public static function get_chat_messages(int $limit = 50, ?string $session_id = null): array
+    {
+        global $wpdb;
+
+        $session_id = $session_id ?? self::get_session_token();
+        $table_name = $wpdb->prefix . 'homaye_chat_memory';
+
+        $query = $wpdb->prepare(
+            "SELECT message_type, message_content, ai_metadata, created_at 
+             FROM $table_name 
+             WHERE session_id = %s 
+             ORDER BY created_at ASC",
+            $session_id
+        );
+
+        if ($limit > 0) {
+            $query .= $wpdb->prepare(" LIMIT %d", $limit);
+        }
+
+        $results = $wpdb->get_results($query);
+
+        $messages = [];
+        foreach ($results as $row) {
+            $messages[] = [
+                'type' => $row->message_type,
+                'content' => $row->message_content,
+                'metadata' => $row->ai_metadata ? json_decode($row->ai_metadata, true) : [],
+                'timestamp' => $row->created_at
+            ];
+        }
+
+        return $messages;
+    }
+
+    /**
+     * Check if chat history exists for current session
+     *
+     * @param string|null $session_id Optional specific session ID
+     * @return bool True if chat history exists
+     */
+    public static function has_chat_history(?string $session_id = null): bool
+    {
+        global $wpdb;
+
+        $session_id = $session_id ?? self::get_session_token();
+        $table_name = $wpdb->prefix . 'homaye_chat_memory';
+
+        $count = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table_name WHERE session_id = %s",
+            $session_id
+        ));
+
+        return (int)$count > 0;
+    }
+
+    /**
+     * Clear chat history for current session
+     *
+     * @param string|null $session_id Optional specific session ID
+     * @return bool Success status
+     */
+    public static function clear_chat_history(?string $session_id = null): bool
+    {
+        global $wpdb;
+
+        $session_id = $session_id ?? self::get_session_token();
+        $table_name = $wpdb->prefix . 'homaye_chat_memory';
+
+        $result = $wpdb->delete(
+            $table_name,
+            ['session_id' => $session_id],
+            ['%s']
+        );
+
+        return $result !== false;
+    }
+
+    /**
+     * Get user role for current user
+     *
+     * @return string User role
+     */
+    private static function get_user_role(): string
+    {
+        if (is_user_logged_in()) {
+            $user = wp_get_current_user();
+            if (in_array('administrator', (array) $user->roles)) {
+                return 'admin';
+            }
+            if (in_array('customer', (array) $user->roles)) {
+                return 'customer';
+            }
+            return 'customer'; // Default for logged-in users
+        }
+        return 'guest';
+    }
+
+    /**
+     * Improve session token generation with better persistence
+     * This method is called on init to ensure cookie is properly set
+     *
+     * @return string Session token
+     */
+    public static function ensure_session_token(): string
+    {
+        $cookie_name = 'homa_session_token';
+        
+        // For logged-in users, use user ID
+        if (is_user_logged_in()) {
+            $token = 'user_' . get_current_user_id();
+            // Update cookie to match
+            if (!isset($_COOKIE[$cookie_name]) || $_COOKIE[$cookie_name] !== $token) {
+                setcookie($cookie_name, $token, time() + (48 * 3600), '/', '', is_ssl(), true);
+            }
+            return $token;
+        }
+
+        // For guests, ensure persistent cookie
+        if (isset($_COOKIE[$cookie_name]) && !empty($_COOKIE[$cookie_name])) {
+            $token = sanitize_text_field($_COOKIE[$cookie_name]);
+            // Refresh cookie expiration
+            setcookie($cookie_name, $token, time() + (48 * 3600), '/', '', is_ssl(), true);
+            return $token;
+        }
+
+        // Generate new token for new guests
+        $token = 'guest_' . bin2hex(random_bytes(16));
+        setcookie($cookie_name, $token, time() + (48 * 3600), '/', '', is_ssl(), true);
+        
+        return $token;
+    }
 }

@@ -235,6 +235,9 @@ class HT_Parallel_UI
                 $user_id = $this->get_guest_identifier();
             }
 
+            // Store user message in database
+            HT_Vault_Manager::store_chat_message('user', $message);
+
             // Build context for AI
             $full_context = [
                 'user_message' => $message,
@@ -253,9 +256,17 @@ class HT_Parallel_UI
             // Extract actions from response
             $actions = $this->extract_actions($ai_response);
 
+            $response_text = $ai_response['response'] ?? $ai_response['message'] ?? (is_string($ai_response) ? $ai_response : 'متأسفم، نتوانستم پاسخی تولید کنم.');
+
+            // Store AI response in database
+            HT_Vault_Manager::store_chat_message('assistant', $response_text, [
+                'actions' => $actions,
+                'persona' => $ai_response['detected_persona'] ?? $persona
+            ]);
+
             return new \WP_REST_Response([
                 'success' => true,
-                'response' => $ai_response['response'] ?? $ai_response['message'] ?? (is_string($ai_response) ? $ai_response : 'متأسفم، نتوانستم پاسخی تولید کنم.'),
+                'response' => $response_text,
                 'actions' => $actions,
                 'persona' => $ai_response['detected_persona'] ?? $persona
             ], 200);

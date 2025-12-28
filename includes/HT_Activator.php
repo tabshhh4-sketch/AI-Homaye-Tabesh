@@ -345,6 +345,27 @@ class HT_Activator
 
             dbDelta($sql);
 
+            // Create Chat Memory table for persistent message history
+            $table_name = $wpdb->prefix . 'homaye_chat_memory';
+
+            $sql = "CREATE TABLE IF NOT EXISTS $table_name (
+                id bigint(20) NOT NULL AUTO_INCREMENT,
+                session_id varchar(100) NOT NULL,
+                user_identifier varchar(100) NOT NULL,
+                user_role varchar(20) DEFAULT 'guest',
+                message_type varchar(20) NOT NULL,
+                message_content text NOT NULL,
+                ai_metadata json DEFAULT NULL,
+                created_at datetime DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY  (id),
+                KEY session_id (session_id),
+                KEY user_identifier (user_identifier),
+                KEY message_type (message_type),
+                KEY created_at (created_at)
+            ) $charset_collate;";
+
+            dbDelta($sql);
+
             // Create Translation Cache table (PR14)
             $table_name = $wpdb->prefix . 'homa_translations';
 

@@ -155,6 +155,57 @@ class HT_Vault_REST_API
                 ]
             ]
         ]);
+
+        // Get chat history
+        register_rest_route(self::NAMESPACE, '/chat/memory', [
+            'methods' => 'GET',
+            'callback' => [self::class, 'get_chat_history'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'limit' => [
+                    'required' => false,
+                    'type' => 'integer',
+                    'default' => 50,
+                    'sanitize_callback' => 'absint'
+                ],
+                'session_id' => [
+                    'required' => false,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field'
+                ]
+            ]
+        ]);
+
+        // Save chat message
+        register_rest_route(self::NAMESPACE, '/chat/memory', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'save_chat_message'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'message_type' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field'
+                ],
+                'message_content' => [
+                    'required' => true,
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_textarea_field'
+                ],
+                'ai_metadata' => [
+                    'required' => false,
+                    'type' => 'object',
+                    'default' => []
+                ]
+            ]
+        ]);
+
+        // Clear chat history
+        register_rest_route(self::NAMESPACE, '/chat/memory/clear', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'clear_chat_history'],
+            'permission_callback' => '__return_true'
+        ]);
     }
 
     /**
@@ -208,12 +259,16 @@ class HT_Vault_REST_API
         $vault_data = HT_Vault_Manager::get_all($session_token);
         $session = HT_Vault_Manager::get_session_snapshot($session_token);
         $interests = HT_Vault_Manager::get_user_interests();
+        $chat_messages = HT_Vault_Manager::get_chat_messages(50, $session_token);
+        $has_chat_history = HT_Vault_Manager::has_chat_history($session_token);
 
         return new \WP_REST_Response([
             'success' => true,
             'vault_data' => $vault_data,
             'session' => $session,
             'interests' => $interests,
+            'chat_messages' => $chat_messages,
+            'has_chat_history' => $has_chat_history,
             'session_token' => HT_Vault_Manager::get_session_token()
         ], 200);
     }
@@ -377,5 +432,73 @@ class HT_Vault_REST_API
             'compressed_summary' => $compressed,
             'metrics' => $metrics
         ], 200);
+    }
+
+    /**
+     * Get chat history endpoint
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response object
+     */
+    public static function get_chat_history(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $limit = $request->get_param('limit') ?? 50;
+        $session_id = $request->get_param('session_id');
+
+        $messages = HT_Vault_Manager::get_chat_messages($limit, $session_id);
+        $has_history = HT_Vault_Manager::has_chat_history($session_id);
+        $session_token = HT_Vault_Manager::get_session_token();
+
+        return new \WP_REST_Response([
+            'success' => true,
+            'messages' => $messages,
+            'has_history' => $has_history,
+            'session_token' => $session_token,
+            'count' => count($messages)
+        ], 200);
+    }
+
+    /**
+     * Save chat message endpoint
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response object
+     */
+    public static function save_chat_message(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $message_type = $request->get_param('message_type');
+        $message_content = $request->get_param('message_content');
+        $ai_metadata = $request->get_param('ai_metadata') ?? [];
+
+        $success = HT_Vault_Manager::store_chat_message($message_type, $message_content, $ai_metadata);
+
+        if ($success) {
+            return new \WP_REST_Response([
+                'success' => true,
+                'message' => 'Chat message saved successfully',
+                'session_token' => HT_Vault_Manager::get_session_token()
+            ], 200);
+        }
+
+        return new \WP_REST_Response([
+            'success' => false,
+            'message' => 'Failed to save chat message'
+        ], 500);
+    }
+
+    /**
+     * Clear chat history endpoint
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response Response object
+     */
+    public static function clear_chat_history(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $success = HT_Vault_Manager::clear_chat_history();
+
+        return new \WP_REST_Response([
+            'success' => $success,
+            'message' => $success ? 'Chat history cleared successfully' : 'Failed to clear chat history'
+        ], $success ? 200 : 500);
     }
 }
