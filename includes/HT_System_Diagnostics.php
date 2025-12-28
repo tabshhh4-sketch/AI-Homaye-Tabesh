@@ -27,7 +27,7 @@ class HT_System_Diagnostics
     public function check_system_integrity(): array
     {
         return [
-            'gemini_api' => $this->test_gemini_connection(),
+            'openai_api' => $this->test_openai_connection(),
             'tabesh_database' => $this->check_tabesh_db_bridge(),
             'index_status' => $this->get_index_health_score(),
             'meli_payamak' => $this->check_meli_payamak_status(),
@@ -39,16 +39,18 @@ class HT_System_Diagnostics
     }
 
     /**
-     * Test Gemini API connection
+     * Test OpenAI API connection
      *
      * @return array Connection status
      */
-    private function test_gemini_connection(): array
+    private function test_openai_connection(): array
     {
         $start_time = microtime(true);
         
         try {
-            $api_key = get_option('ht_gemini_api_key', '');
+            $openai_key = get_option('ht_openai_api_key', '');
+            $legacy_key = get_option('ht_gemini_api_key', '');
+            $api_key = !empty($openai_key) ? $openai_key : $legacy_key;
             
             if (empty($api_key)) {
                 return [
@@ -64,7 +66,7 @@ class HT_System_Diagnostics
                 return [
                     'status' => 'error',
                     'connection' => 'Not Initialized',
-                    'message' => 'کلاینت Gemini مقداردهی نشده است'
+                    'message' => 'کلاینت AI مقداردهی نشده است'
                 ];
             }
 
@@ -77,11 +79,12 @@ class HT_System_Diagnostics
             $response_time = round((microtime(true) - $start_time) * 1000, 2);
 
             if ($response) {
+                $model = get_option('ht_ai_model', 'gpt-4o-mini');
                 return [
                     'status' => 'healthy',
                     'connection' => 'Connected',
                     'response_time' => $response_time . 'ms',
-                    'model' => 'gemini-2.5-flash'
+                    'model' => $model
                 ];
             }
 
@@ -274,11 +277,13 @@ class HT_System_Diagnostics
         $issues = [];
 
         // Check API key
-        if (empty(get_option('ht_gemini_api_key', ''))) {
+        $openai_key = get_option('ht_openai_api_key', '');
+        $legacy_key = get_option('ht_gemini_api_key', '');
+        if (empty($openai_key) && empty($legacy_key)) {
             $issues[] = [
                 'severity' => 'critical',
                 'title' => 'کلید API تنظیم نشده',
-                'description' => 'برای عملکرد هما باید کلید Gemini API را تنظیم کنید',
+                'description' => 'برای عملکرد هما باید کلید OpenAI API را تنظیم کنید',
                 'fix_available' => false
             ];
         }

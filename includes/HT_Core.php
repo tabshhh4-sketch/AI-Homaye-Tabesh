@@ -22,7 +22,7 @@ final class HT_Core
     private static ?HT_Core $instance = null;
 
     /**
-     * Gemini AI client
+     * AI client (OpenAI/ChatGPT)
      */
     public ?HT_Gemini_Client $brain = null;
 
@@ -686,10 +686,11 @@ final class HT_Core
                 // Check if API key is configured (show notice once per user)
                 $user_id = get_current_user_id();
                 if ($user_id && !get_user_meta($user_id, 'homa_api_key_notice_dismissed', true)) {
-                    $api_key = get_option('ht_gemini_api_key', '');
-                    if (empty($api_key)) {
+                    $openai_key = get_option('ht_openai_api_key', '');
+                    $legacy_key = get_option('ht_gemini_api_key', '');
+                    if (empty($openai_key) && empty($legacy_key)) {
                         HT_Error_Handler::admin_notice(
-                            __('کلید API همای تابش تنظیم نشده است. لطفاً به تنظیمات بروید و کلید API را وارد کنید.', 'homaye-tabesh'),
+                            __('کلید API همای تابش تنظیم نشده است. لطفاً به تنظیمات بروید و کلید OpenAI را وارد کنید.', 'homaye-tabesh'),
                             'warning'
                         );
                         // Mark as shown for this user for 7 days
@@ -858,7 +859,7 @@ final class HT_Core
     public function modify_csp_headers(): void
     {
         // Only modify if GapGPT provider is selected
-        $provider = get_option('ht_ai_provider', 'gemini_direct');
+        $provider = get_option('ht_ai_provider', 'openai');
         if ($provider === 'gapgpt') {
             $base_url = get_option('ht_gapgpt_base_url', 'https://api.gapgpt.app/v1');
             $parsed_url = parse_url($base_url);
