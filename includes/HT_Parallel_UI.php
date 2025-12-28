@@ -181,6 +181,22 @@ class HT_Parallel_UI
      */
     public function register_rest_routes(): void
     {
+        // Root endpoint for namespace verification
+        register_rest_route('homaye/v1', '/', [
+            'methods' => 'GET',
+            'callback' => function() {
+                return new \WP_REST_Response([
+                    'namespace' => 'homaye/v1',
+                    'status' => 'active',
+                    'endpoints' => [
+                        '/ai/chat',
+                        '/sidebar/state',
+                    ]
+                ], 200);
+            },
+            'permission_callback' => '__return_true',
+        ]);
+        
         // Chat endpoint
         register_rest_route('homaye/v1', '/ai/chat', [
             'methods' => 'POST',
