@@ -105,11 +105,6 @@ class HT_Admin
             \HomayeTabesh\HT_Activator::ensure_tables_exist();
         }
 
-        register_setting('homaye_tabesh_settings', 'ht_gemini_api_key', [
-            'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
-        ]);
-
         register_setting('homaye_tabesh_settings', 'ht_tracking_enabled', [
             'type' => 'boolean',
             'default' => true,
@@ -164,16 +159,16 @@ class HT_Admin
             'default' => true,
         ]);
 
-        // Global AI Configuration settings
+        // Global AI Configuration settings (GapGPT)
         register_setting('homaye_tabesh_settings', 'ht_ai_provider', [
             'type' => 'string',
-            'default' => 'gemini_direct',
+            'default' => 'gapgpt',
             'sanitize_callback' => 'sanitize_text_field',
         ]);
 
         register_setting('homaye_tabesh_settings', 'ht_ai_model', [
             'type' => 'string',
-            'default' => 'gemini-2.0-flash',
+            'default' => 'gemini-2.5-flash',
             'sanitize_callback' => 'sanitize_text_field',
         ]);
 
@@ -237,14 +232,6 @@ class HT_Admin
         );
 
         // Add settings fields
-        add_settings_field(
-            'ht_gemini_api_key',
-            __('کلید API گوگل Gemini', 'homaye-tabesh'),
-            [$this, 'render_api_key_field'],
-            'homaye-tabesh',
-            'ht_main_section'
-        );
-
         add_settings_field(
             'ht_tracking_enabled',
             __('ردیابی رفتار', 'homaye-tabesh'),
@@ -378,8 +365,8 @@ class HT_Admin
     {
         ?>
         <p class="description">
-            تنظیم سرویس‌دهنده و مدل هوش مصنوعی برای تمام عملیات «هما».
-            می‌توانید بین Google Gemini Direct یا GapGPT Gateway (سازگار با OpenAI) انتخاب کنید.
+            تنظیم مدل هوش مصنوعی برای تمام عملیات «هما» از طریق GapGPT API.
+            GapGPT دسترسی به طیف گسترده‌ای از مدل‌های هوش مصنوعی از شرکت‌های مختلف را فراهم می‌کند.
         </p>
         <?php
     }
@@ -389,19 +376,15 @@ class HT_Admin
      */
     public function render_ai_provider_field(): void
     {
-        $value = get_option('ht_ai_provider', 'gemini_direct');
+        // Set the provider to gapgpt (hidden, for backward compatibility)
         ?>
-        <select id="ht_ai_provider" name="ht_ai_provider">
-            <option value="gemini_direct" <?php selected($value, 'gemini_direct'); ?>>
-                Google Gemini Direct
-            </option>
-            <option value="gapgpt" <?php selected($value, 'gapgpt'); ?>>
-                GapGPT Gateway
-            </option>
-        </select>
-        <p class="description">
-            انتخاب سرویس‌دهنده API برای هوش مصنوعی.
-        </p>
+        <input type="hidden" id="ht_ai_provider" name="ht_ai_provider" value="gapgpt">
+        <div class="notice notice-info inline" style="margin: 0; padding: 10px;">
+            <p style="margin: 0;">
+                <strong>🔌 GapGPT API</strong> - دروازه یکپارچه به مدل‌های هوش مصنوعی<br>
+                <small>سازگار با OpenAI API و دسترسی به مدل‌های OpenAI، Google Gemini، Anthropic Claude، DeepSeek، XAI و بیشتر</small>
+            </p>
+        </div>
         <?php
     }
 
@@ -410,27 +393,64 @@ class HT_Admin
      */
     public function render_ai_model_field(): void
     {
-        $value = get_option('ht_ai_model', 'gemini-2.0-flash');
-        $models = [
-            'grok-3-mini' => 'Grok 3 Mini',
-            'gemini-2.0-flash' => 'Gemini 2.0 Flash',
-            'qwen3-235b-a22b' => 'Qwen3 235B A22B',
-            'deepseek-chat' => 'DeepSeek Chat',
-            'claude-sonnet-4-20250514' => 'Claude Sonnet 4',
-            'gpt-4o-mini' => 'GPT-4o Mini',
+        $value = get_option('ht_ai_model', 'gemini-2.5-flash');
+        
+        // Models organized by provider
+        $model_groups = [
+            'Google Gemini' => [
+                'gemini-2.5-flash' => 'Gemini 2.5 Flash (توصیه شده)',
+                'gemini-2.5-pro' => 'Gemini 2.5 Pro',
+                'gemini-2.0-flash' => 'Gemini 2.0 Flash',
+                'gemini-2.0-flash-lite' => 'Gemini 2.0 Flash Lite',
+                'gemini-3-pro-preview' => 'Gemini 3 Pro Preview',
+            ],
+            'OpenAI' => [
+                'gpt-4o' => 'GPT-4o',
+                'gpt-4o-mini' => 'GPT-4o Mini',
+                'chatgpt-4o-latest' => 'ChatGPT-4o Latest',
+                'o1' => 'O1',
+                'o1-mini' => 'O1 Mini',
+                'o3-mini' => 'O3 Mini',
+                'o3-mini-high' => 'O3 Mini High',
+                'o3-mini-low' => 'O3 Mini Low',
+                'o4-mini' => 'O4 Mini',
+                'gpt-5' => 'GPT-5',
+                'gpt-5-mini' => 'GPT-5 Mini',
+                'gpt-5-nano' => 'GPT-5 Nano',
+            ],
+            'Anthropic Claude' => [
+                'claude-opus-4-5-20251101' => 'Claude Opus 4.5',
+                'claude-opus-4-1-20250805' => 'Claude Opus 4.1',
+            ],
+            'XAI' => [
+                'grok-3' => 'Grok 3',
+                'grok-3-mini' => 'Grok 3 Mini',
+                'grok-3-fast' => 'Grok 3 Fast',
+                'grok-3-mini-fast' => 'Grok 3 Mini Fast',
+                'grok-4' => 'Grok 4',
+            ],
+            'DeepSeek' => [
+                'deepseek-chat' => 'DeepSeek Chat',
+                'deepseek-reasoner' => 'DeepSeek Reasoner',
+            ],
         ];
         ?>
-        <select id="ht_ai_model" name="ht_ai_model">
-            <?php foreach ($models as $model_value => $model_label): ?>
-                <option value="<?php echo esc_attr($model_value); ?>" <?php selected($value, $model_value); ?>>
-                    <?php echo esc_html($model_label); ?>
-                </option>
+        <select id="ht_ai_model" name="ht_ai_model" style="min-width: 300px;">
+            <?php foreach ($model_groups as $provider => $models): ?>
+                <optgroup label="<?php echo esc_attr($provider); ?>">
+                    <?php foreach ($models as $model_value => $model_label): ?>
+                        <option value="<?php echo esc_attr($model_value); ?>" <?php selected($value, $model_value); ?>>
+                            <?php echo esc_html($model_label); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </optgroup>
             <?php endforeach; ?>
         </select>
         <p class="description">
-            مدل هوش مصنوعی مورد استفاده برای پردازش درخواست‌ها. 
-            برخی مدل‌ها (مانند Gemini) از طریق هر دو ارائه‌دهنده قابل دسترسی هستند، 
-            در حالی که دیگر مدل‌ها فقط از طریق GapGPT Gateway در دسترس هستند.
+            انتخاب مدل هوش مصنوعی برای پردازش درخواست‌ها. 
+            همه مدل‌ها از طریق GapGPT API در دسترس هستند.
+            <br>
+            <a href="https://gapgpt.app/models" target="_blank">مشاهده لیست کامل مدل‌ها و قیمت‌ها →</a>
         </p>
         <?php
     }
@@ -1566,89 +1586,48 @@ class HT_Admin
             return;
         }
 
-        $provider = isset($_POST['provider']) ? sanitize_text_field($_POST['provider']) : 'gemini_direct';
         $api_key = isset($_POST['api_key']) ? sanitize_text_field($_POST['api_key']) : '';
         $base_url = isset($_POST['base_url']) ? esc_url_raw($_POST['base_url']) : 'https://api.gapgpt.app/v1';
 
-        // Test based on provider
-        if ($provider === 'gapgpt') {
-            if (empty($api_key)) {
-                wp_send_json_error(['message' => 'کلید API برای GapGPT الزامی است']);
-                return;
-            }
+        if (empty($api_key)) {
+            wp_send_json_error(['message' => 'کلید API برای GapGPT الزامی است']);
+            return;
+        }
 
-            // Test GapGPT connection
-            $test_url = rtrim($base_url, '/') . '/chat/completions';
-            $response = wp_remote_post($test_url, [
-                'timeout' => 15,
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                    'Authorization' => 'Bearer ' . $api_key,
+        // Test GapGPT connection
+        $test_url = rtrim($base_url, '/') . '/chat/completions';
+        $response = wp_remote_post($test_url, [
+            'timeout' => 15,
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Bearer ' . $api_key,
+            ],
+            'body' => wp_json_encode([
+                'model' => 'gemini-2.5-flash',
+                'messages' => [
+                    ['role' => 'user', 'content' => 'سلام']
                 ],
-                'body' => wp_json_encode([
-                    'model' => 'gemini-2.0-flash',
-                    'messages' => [
-                        ['role' => 'user', 'content' => 'سلام']
-                    ],
-                    'max_tokens' => 10,
-                ]),
-            ]);
+                'max_tokens' => 10,
+            ]),
+        ]);
 
-            if (is_wp_error($response)) {
-                wp_send_json_error(['message' => 'خطا در ارتباط: ' . $response->get_error_message()]);
-                return;
-            }
+        if (is_wp_error($response)) {
+            wp_send_json_error(['message' => 'خطا در ارتباط: ' . $response->get_error_message()]);
+            return;
+        }
 
-            $status_code = wp_remote_retrieve_response_code($response);
-            $body = json_decode(wp_remote_retrieve_body($response), true);
+        $status_code = wp_remote_retrieve_response_code($response);
+        $body = json_decode(wp_remote_retrieve_body($response), true);
 
-            if ($status_code === 200 || $status_code === 201) {
-                wp_send_json_success(['message' => 'اتصال موفق! GapGPT به درستی کار می‌کند']);
-            } elseif ($status_code === 401) {
-                wp_send_json_error(['message' => 'کلید API نامعتبر است']);
-            } elseif ($status_code === 429) {
-                wp_send_json_error(['message' => 'محدودیت درخواست: لطفاً کمی صبر کنید']);
-            } else {
-                $error_msg = isset($body['error']['message']) ? $body['error']['message'] : 'خطای ناشناخته';
-                wp_send_json_error(['message' => 'خطا (' . $status_code . '): ' . $error_msg]);
-            }
+        if ($status_code === 200 || $status_code === 201) {
+            wp_send_json_success(['message' => 'اتصال موفق! GapGPT به درستی کار می‌کند']);
+        } elseif ($status_code === 401) {
+            wp_send_json_error(['message' => 'کلید API نامعتبر است']);
+        } elseif ($status_code === 429) {
+            wp_send_json_error(['message' => 'محدودیت درخواست: لطفاً کمی صبر کنید']);
         } else {
-            // Test Gemini Direct
-            $gemini_api_key = get_option('ht_gemini_api_key', '');
-            if (empty($gemini_api_key)) {
-                wp_send_json_error(['message' => 'کلید API Gemini تنظیم نشده است']);
-                return;
-            }
-
-            $test_url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=' . $gemini_api_key;
-            $response = wp_remote_post($test_url, [
-                'timeout' => 15,
-                'headers' => [
-                    'Content-Type' => 'application/json',
-                ],
-                'body' => wp_json_encode([
-                    'contents' => [
-                        ['parts' => [['text' => 'سلام']]]
-                    ],
-                ]),
-            ]);
-
-            if (is_wp_error($response)) {
-                wp_send_json_error(['message' => 'خطا در ارتباط: ' . $response->get_error_message()]);
-                return;
-            }
-
-            $status_code = wp_remote_retrieve_response_code($response);
-            
-            if ($status_code === 200) {
-                wp_send_json_success(['message' => 'اتصال موفق! Gemini Direct به درستی کار می‌کند']);
-            } elseif ($status_code === 401 || $status_code === 403) {
-                wp_send_json_error(['message' => 'کلید API Gemini نامعتبر است']);
-            } elseif ($status_code === 429) {
-                wp_send_json_error(['message' => 'محدودیت درخواست: سهمیه API تمام شده']);
-            } else {
-                wp_send_json_error(['message' => 'خطا در ارتباط با Gemini (کد ' . $status_code . ')']);
-            }
+            $error_msg = isset($body['error']['message']) ? $body['error']['message'] : 'خطای ناشناخته';
+            wp_send_json_error(['message' => 'خطا (' . $status_code . '): ' . $error_msg]);
         }
     }
 }
