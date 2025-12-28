@@ -269,6 +269,7 @@ class HT_Activator
 
             $sql = "CREATE TABLE IF NOT EXISTS $table_name (
                 id bigint(20) NOT NULL AUTO_INCREMENT,
+                user_id bigint(20) DEFAULT NULL,
                 user_identifier varchar(100) NOT NULL,
                 threat_score int(11) DEFAULT 0,
                 last_threat_type varchar(50) DEFAULT NULL,
@@ -276,6 +277,7 @@ class HT_Activator
                 last_activity datetime DEFAULT CURRENT_TIMESTAMP,
                 created_at datetime DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY  (id),
+                KEY user_id (user_id),
                 UNIQUE KEY user_identifier (user_identifier),
                 KEY threat_score (threat_score),
                 KEY last_activity (last_activity)
@@ -392,18 +394,20 @@ class HT_Activator
 
             $sql = "CREATE TABLE IF NOT EXISTS $table_name (
                 id bigint(20) NOT NULL AUTO_INCREMENT,
-                fact_key varchar(100) NOT NULL,
-                fact_value text NOT NULL,
-                fact_category varchar(50) DEFAULT 'general',
+                fact text NOT NULL,
+                category varchar(50) DEFAULT 'general',
+                fact_key varchar(100) DEFAULT NULL,
+                fact_value text DEFAULT NULL,
                 authority_level int(11) DEFAULT 0,
                 source varchar(100) DEFAULT 'system',
                 is_active tinyint(1) DEFAULT 1,
                 verified tinyint(1) DEFAULT 0,
+                tags text DEFAULT NULL,
                 created_at datetime DEFAULT CURRENT_TIMESTAMP,
                 updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 PRIMARY KEY  (id),
-                UNIQUE KEY fact_key (fact_key),
-                KEY fact_category (fact_category),
+                KEY category (category),
+                KEY fact_key (fact_key),
                 KEY is_active (is_active),
                 KEY verified (verified),
                 KEY authority_level (authority_level)
