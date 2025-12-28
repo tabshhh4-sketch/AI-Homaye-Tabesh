@@ -124,6 +124,22 @@ class HT_Persona_Engine
     }
 
     /**
+     * Get current user persona (cached result)
+     * 
+     * @return array Persona data with type, confidence, interests, etc.
+     */
+    public static function get_current_persona(): array
+    {
+        // Use analyze_user_persona which does the full analysis
+        $persona_data = self::analyze_user_persona();
+        
+        // Add interests data
+        $persona_data['interests'] = HT_Vault_Manager::get_user_interests(10);
+        
+        return $persona_data;
+    }
+
+    /**
      * Get Persian label for persona
      *
      * @param string $persona Persona type
