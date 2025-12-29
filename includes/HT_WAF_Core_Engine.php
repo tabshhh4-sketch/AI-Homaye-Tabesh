@@ -108,6 +108,167 @@ class HT_WAF_Core_Engine
         
         // Hook into WordPress request processing
         add_action('init', [$this, 'inspect_request'], 1);
+        
+        // Register REST API endpoints for security center
+        add_action('rest_api_init', [$this, 'register_rest_endpoints']);
+    }
+
+    /**
+     * Register REST API endpoints for WAF management
+     *
+     * @return void
+     */
+    public function register_rest_endpoints(): void
+    {
+        // Get blacklisted IPs
+        register_rest_route('homaye/v1', '/waf/blacklist', [
+            'methods' => 'GET',
+            'callback' => [$this, 'rest_get_blacklist'],
+            'permission_callback' => function () {
+                return current_user_can('manage_options');
+            },
+            'args' => [
+                'limit' => [
+                    'type' => 'integer',
+                    'default' => 50,
+                    'minimum' => 1,
+                    'maximum' => 100,
+                    'sanitize_callback' => 'absint',
+                ],
+                'offset' => [
+                    'type' => 'integer',
+                    'default' => 0,
+                    'minimum' => 0,
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ]);
+
+        // Unblock IP
+        register_rest_route('homaye/v1', '/waf/blacklist/(?P<ip>[^/]+)', [
+            'methods' => 'DELETE',
+            'callback' => [$this, 'rest_unblock_ip'],
+            'permission_callback' => function () {
+                return current_user_can('manage_options');
+            },
+            'args' => [
+                'ip' => [
+                    'type' => 'string',
+                    'required' => true,
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'validate_callback' => function ($value) {
+                        return filter_var($value, FILTER_VALIDATE_IP) !== false;
+                    },
+                ],
+            ],
+        ]);
+
+        // Block IP manually
+        register_rest_route('homaye/v1', '/waf/blacklist', [
+            'methods' => 'POST',
+            'callback' => [$this, 'rest_block_ip'],
+            'permission_callback' => function () {
+                return current_user_can('manage_options');
+            },
+            'args' => [
+                'ip' => [
+                    'type' => 'string',
+                    'required' => true,
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'validate_callback' => function ($value) {
+                        return filter_var($value, FILTER_VALIDATE_IP) !== false;
+                    },
+                ],
+                'reason' => [
+                    'type' => 'string',
+                    'default' => 'Manual block by administrator',
+                    'sanitize_callback' => 'sanitize_text_field',
+                ],
+                'duration' => [
+                    'type' => 'integer',
+                    'default' => 24,
+                    'minimum' => 1,
+                    'maximum' => 720,
+                    'sanitize_callback' => 'absint',
+                ],
+            ],
+        ]);
+    }
+
+    /**
+     * REST API: Get blacklisted IPs
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response
+     */
+    public function rest_get_blacklist(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $limit = $request->get_param('limit') ?? 50;
+        $offset = $request->get_param('offset') ?? 0;
+        
+        $ips = $this->get_blacklisted_ips((int)$limit, (int)$offset);
+        
+        return new \WP_REST_Response([
+            'success' => true,
+            'ips' => $ips,
+            'count' => count($ips)
+        ], 200);
+    }
+
+    /**
+     * REST API: Unblock IP
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response
+     */
+    public function rest_unblock_ip(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $ip = $request->get_param('ip');
+        
+        // Validation already handled by register_rest_route args
+        $result = $this->unblock_ip($ip);
+        
+        if ($result) {
+            return new \WP_REST_Response([
+                'success' => true,
+                'message' => 'IP unblocked successfully'
+            ], 200);
+        } else {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Failed to unblock IP',
+                'code' => 'unblock_failed'
+            ], 500);
+        }
+    }
+
+    /**
+     * REST API: Block IP manually
+     *
+     * @param \WP_REST_Request $request Request object
+     * @return \WP_REST_Response
+     */
+    public function rest_block_ip(\WP_REST_Request $request): \WP_REST_Response
+    {
+        $ip = $request->get_param('ip');
+        $reason = $request->get_param('reason') ?? 'Manual block by administrator';
+        $duration = $request->get_param('duration') ?? 24;
+        
+        // Validation already handled by register_rest_route args
+        $result = $this->auto_block_ip($ip, $reason, (int)$duration);
+        
+        if ($result) {
+            return new \WP_REST_Response([
+                'success' => true,
+                'message' => 'IP blocked successfully'
+            ], 200);
+        } else {
+            return new \WP_REST_Response([
+                'success' => false,
+                'message' => 'Failed to block IP',
+                'code' => 'block_failed'
+            ], 500);
+        }
     }
 
     /**
