@@ -25,8 +25,8 @@ const HomaSidebar = () => {
     const homaEmit = useHomaEmit();
 
     useEffect(() => {
-        // Load chat history from localStorage
-        loadChatHistory();
+        // Load chat history from database first
+        loadChatHistoryFromDatabase();
         
         // Fetch user role context (PR15)
         fetchUserRoleContext();
@@ -90,6 +90,40 @@ const HomaSidebar = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    /**
+     * Load chat history from database
+     */
+    const loadChatHistoryFromDatabase = async () => {
+        try {
+            const response = await fetch('/wp-json/homaye-tabesh/v1/chat/memory', {
+                headers: {
+                    'X-WP-Nonce': window.homayeParallelUIConfig?.nonce || ''
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.messages && data.messages.length > 0) {
+                    // Convert database messages to UI format
+                    const loadedMessages = data.messages.map((msg, index) => ({
+                        id: Date.now() + index,
+                        type: msg.type,
+                        content: msg.content,
+                        timestamp: new Date(msg.timestamp),
+                        actions: msg.metadata?.actions || []
+                    }));
+                    
+                    // Load messages into store
+                    loadedMessages.forEach(msg => addMessage(msg));
+                    
+                    console.log('[Homa] Loaded', loadedMessages.length, 'messages from database');
+                }
+            }
+        } catch (error) {
+            console.error('[Homa] Failed to load chat history from database:', error);
+        }
+    };
+
     const loadChatHistory = () => {
         try {
             const history = localStorage.getItem('homa_chat_history');
@@ -137,7 +171,8 @@ const HomaSidebar = () => {
                 if (data.success) {
                     setUserRoleContext(data.context);
                     
-                    // Add welcome message if chat is empty
+                    // Only add welcome message if chat is empty (no history)
+                    // This prevents greeting from appearing on every page load
                     if (messages.length === 0 && data.welcome_message) {
                         const welcomeMessage = {
                             id: Date.now(),
@@ -147,6 +182,11 @@ const HomaSidebar = () => {
                             actions: data.suggested_actions || []
                         };
                         addMessage(welcomeMessage);
+                        
+                        // Save welcome message to database
+                        saveChatMessageToDatabase('assistant', data.welcome_message, {
+                            actions: data.suggested_actions || []
+                        });
                     }
                 }
             }
@@ -163,6 +203,28 @@ const HomaSidebar = () => {
             saveChatHistory();
         }
     }, [messages, userPersona]);
+
+    /**
+     * Save chat message to database
+     */
+    const saveChatMessageToDatabase = async (messageType, messageContent, metadata = {}) => {
+        try {
+            await fetch('/wp-json/homaye-tabesh/v1/chat/memory', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': window.homayeParallelUIConfig?.nonce || ''
+                },
+                body: JSON.stringify({
+                    message_type: messageType,
+                    message_content: messageContent,
+                    ai_metadata: metadata
+                })
+            });
+        } catch (error) {
+            console.error('[Homa] Failed to save message to database:', error);
+        }
+    };
 
     const handleSendMessage = async (message) => {
         // Add user message
