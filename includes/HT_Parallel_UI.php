@@ -489,12 +489,8 @@ class HT_Parallel_UI
             }
         }
 
-        // Load on admin pages (for logged-in admin users)
-        if (is_user_logged_in() && current_user_can('manage_options')) {
-            return true;
-        }
-
-        // Don't load on other pages
+        // Don't load on other pages (even for admins, to improve performance)
+        // Admin can use filter hook to force load if needed: add_filter('homa_force_load_scripts', '__return_true')
         return false;
     }
 

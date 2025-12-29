@@ -402,7 +402,8 @@
                     console.warn(`[Homa Orchestrator] Container missing after init attempt ${initAttempts}, retrying...`);
                     window.HomaOrchestrator.createFallbackSidebar();
                 } else {
-                    console.error('[Homa Orchestrator] Failed to create container after maximum attempts. Homa sidebar will not be available.');
+                    console.error('[Homa Orchestrator] Failed to create container after maximum attempts.');
+                    console.error('[Homa Orchestrator] Troubleshooting: Check if there are JavaScript errors in console, or try refreshing the page.');
                     // Stop retry loop
                     return;
                 }

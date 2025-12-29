@@ -387,8 +387,14 @@ const HomaSidebar = () => {
             } catch (error) {
                 console.error('Failed to send message:', error);
                 
-                // Check if we should retry
-                if (retryCount < MAX_RETRIES && error.message.includes('سرور')) {
+                // Check if we should retry based on error type (not message content)
+                const isRetryableError = error.message && (
+                    error.message.includes('Failed to fetch') ||
+                    error.message.includes('NetworkError') ||
+                    error.message.includes('خطای سرور')
+                );
+                
+                if (retryCount < MAX_RETRIES && isRetryableError) {
                     retryCount++;
                     console.log(`[Homa] Retrying message send (attempt ${retryCount}/${MAX_RETRIES})`);
                     
